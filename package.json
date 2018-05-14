@@ -1,0 +1,11 @@
+{
+  "name": "cush",
+  "version": "0.1.0",
+  "scripts": {
+    "build": "coffee-build src -o js",
+    "prepublishOnly": "prepv -i || true"
+  },
+  "devDependencies": {
+    "wch-coffee": "*"
+  }
+}
