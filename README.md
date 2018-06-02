@@ -1,9 +1,13 @@
 # cush v0.2.0
 
+🚧 *Under construction*
+
 **Features:**
+- minimal configuration
 - built-in plugins for popular setups
 - uses [`wch`][1] for file watching/crawling
 - symlink friendly (modules or packages)
 - eager bundling
-- automatic plugin reloads
-- persistent dependency graph
+
+[1]: https://github.com/aleclarson/wch
+

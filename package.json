@@ -1,11 +1,31 @@
 {
   "name": "cush",
   "version": "0.1.0",
+  "description": "Modern module bundler",
+  "repository": "https://github.com/aleclarson/cush.git",
+  "license": "MIT",
   "scripts": {
-    "build": "coffee-build src -o js",
+    "build": "coffee-build src -o lib",
     "prepublishOnly": "prepv -i || true"
   },
+  "dependencies": {
+    "@cush/css-bundle": "^0.1.0",
+    "@cush/js-bundle": "^0.1.0",
+    "@cush/sorcery": "^1.1.0",
+    "acorn": "^5.5.3",
+    "cush": "file:.",
+    "glob-regex": "^0.3.0",
+    "is-object": "^1.0.1",
+    "nebu": "^1.0.1",
+    "saxon": "^0.1.1",
+    "semver": "^5.5.0",
+    "sucrase": "^2.2.0",
+    "tar-install": "^0.0.2",
+    "tar-url": "^0.0.2"
+  },
   "devDependencies": {
+    "coffeescript": "^2.3.0",
+    "temp": "^0.8.3",
     "wch-coffee": "*"
   }
 }

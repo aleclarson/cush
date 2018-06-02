@@ -1,23 +1,16 @@
 isObject = require 'is-object'
-crypto = require 'crypto'
 
 push = Function.apply.bind [].push
 
 u = exports
 
+u.evalFile = require './evalFile'
 u.findPackage = require './findPackage'
 u.lazyRequire = require './lazyRequire'
-
-u.sha256 = (data, len) ->
-
-  hash = crypto
-    .createHash 'sha256'
-    .update data
-    .digest 'hex'
-
-  if typeof len is 'number'
-  then hash.slice 0, len
-  else hash
+u.mapSources = require './mapSources'
+u.relative = require './relative'
+u.sha256 = require './sha256'
+u.uhoh = require './uhoh'
 
 u.cloneArray = (a) ->
   len = a.length
@@ -28,7 +21,26 @@ u.cloneArray = (a) ->
     b[i] = a[i] while i--
     b
 
-u.deepMerge = (a, b) ->
+u.concat = (a, b) ->
+  return b unless an = a.length
+  return a unless bn = b.length
+  res = new Array i = an + bn
+  res[i] = b[i - an] while i-- isnt an
+  res[i] = a[i--] while i isnt -1
+  res
+
+u.each = (obj, fn, ctx) ->
+  if obj
+    for key, val of obj
+      fn.call ctx, val, key
+    return
+
+u.merge = (a, b) ->
+
+  if Array.isArray b
+    push a, b
+    return a
+
   for key, val of b
 
     if Array.isArray val
@@ -38,10 +50,12 @@ u.deepMerge = (a, b) ->
 
     else if isObject val
       if isObject a[key]
-        u.deepMerge a[key], val
+        u.merge a[key], val
         continue
 
-    a[key] = val
+    if val isnt undefined
+      a[key] = val
+
   return a
 
 # Arrays are only shallow cloned.

@@ -1,3 +1,4 @@
+{merge} = require 'cara/utils'
 postcss = require 'postcss'
 cara = require 'cara'
 
@@ -23,7 +24,7 @@ cara.plugin 'postcss', ->
 
   loadConfig = (pack) ->
     if config = pack.eval 'postcss.config.js'
-      deepMerge config, globalConfig
+      merge config, globalConfig
       pack.postcss = postcss config.plugins
       pack.config.postcss = config
       return

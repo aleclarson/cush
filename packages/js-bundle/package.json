@@ -1,9 +1,16 @@
 {
   "name": "js-bundle",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "main": "js/index",
   "scripts": {
     "build": "coffee-build src -o js",
     "prepublishOnly": "prepv -i || true"
+  },
+  "dependencies": {
+    "cush": "file:../.."
+  },
+  "devDependencies": {
+    "coffeescript": "^2.3.0",
+    "wch-coffee": "^0.2.0"
   }
 }

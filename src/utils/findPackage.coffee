@@ -1,14 +1,14 @@
 path = require 'path'
-fs = require 'fsx'
+fs = require 'saxon/sync'
 os = require 'os'
 
-HOME = os.homedir()
+base = /^[./]$/
 
 findPackage = (file) ->
   dir = path.dirname file
   loop
     return dir if fs.isFile path.join dir, 'package.json'
-    break if (dir = path.dirname dir) is HOME
+    break if base.test dir = path.dirname dir
   null
 
 module.exports = findPackage
