@@ -10,10 +10,10 @@ module.exports = (bundle, opts) ->
   packs = new WeakMap
   shared =
     sourceMaps: true
-    plugins: [
-      opts.dev and require('./nebu/strip-dev')
-      opts.nebu?.plugins
-    ]
+    plugins: []
+
+  if opts.nebu?.plugins
+    shared.plugins.push opts.nebu.plugins
 
   @loadPackages (pack) ->
     if config = await loadConfig pack.root
@@ -27,8 +27,9 @@ module.exports = (bundle, opts) ->
 
   @loadModules '.js', (mod) ->
     config = Object.create packs.get(mod.pack)
-    config.filename = path.join mod.pack.root, mod.file.name
+    return if !config.plugins.length
     try
+      config.filename = path.join mod.pack.root, mod.file.name
       res = nebu.process mod.content, config
       if mod.content isnt res.js
         res.content = res.js
