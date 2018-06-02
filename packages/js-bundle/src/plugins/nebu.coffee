@@ -1,10 +1,11 @@
 {evalFile, lazyRequire, mapSources} = require 'cush/utils'
-nebu = require 'nebu'
 cush = require 'cush'
 path = require 'path'
 fs = require 'saxon'
 
-# TODO: inject acorn
+nebu = require 'nebu'
+nebu.acorn = require 'acorn'
+
 module.exports = (bundle, opts) ->
   packs = new WeakMap
   shared =
