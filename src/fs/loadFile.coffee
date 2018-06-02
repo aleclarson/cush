@@ -10,12 +10,14 @@ loadFile = (file, pack) ->
     file.time = Date.now()
 
   # Transform the file.
-  while true
+  try while true
     {ext} = file
     if transform = cush.transformers[ext]
       await transform file, pack
       break if ext is file.ext
     else break
+  catch err
+    cush.emit 'error', err
 
   return file
 
