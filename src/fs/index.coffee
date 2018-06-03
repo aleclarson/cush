@@ -63,7 +63,7 @@ watchPackage = (pack, root) ->
   stream = wch.stream root,
     expr: ['anyof', nodeModulesExpr, wch.expr {skip}]
     fields: ['name', 'exists', 'new']
-    since: new Date
+    since: 1 + Math.ceil Date.now() / 1000
 
   stream.on 'data', (file) ->
 
