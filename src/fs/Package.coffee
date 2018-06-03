@@ -24,7 +24,7 @@ class Package
   file: (name) ->
     file = @files[name]
     if typeof file is 'string'
-      file = @files[file]
+      file = @files[name = file]
     if file is true
       @files[name] = file =
         id: 'f' + nextFileId++
