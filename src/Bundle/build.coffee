@@ -60,21 +60,17 @@ build = (bundle, opts) ->
         pos = resolved.push(null) - 1
 
         # Avoid resolving the same module twice.
-        if isNew = dep is undefined
+        if dep is undefined
           deps[id] = dep =
             resolveImport id, mod, bundle
 
         # Wait for the module to be resolved.
         resolved[pos] = dep = await dep
 
-        if dep and isNew
-          console.log mod.pack.data.name + '/' + mod.file.name + ' => ' + dep.pack.data.name + '/' + dep.file.name
-
         # The module cannot be found.
         if dep is false
           missed.push [mod, i]
           return
-
 
         # Ensure the module is loaded once.
         if !modules[dep.file.id]
