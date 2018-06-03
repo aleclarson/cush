@@ -16,7 +16,7 @@ class Bundle
     @elapsed = null   # time spent building
     @missed = []      # missing dependencies
     @modules = {}     # used modules
-    @packages = {}    # used packages
+    @packages = []    # used packages
     @_result = null   # build promise
     @_hooks =
       loadPackage: []
@@ -38,7 +38,7 @@ class Bundle
     # prevent future builds
     @read = noop.val Promise.resolve()
 
-    Object.keys(@packages).forEach @_dropPackage.bind this
+    @packages.forEach @_dropPackage.bind this
     return this
 
   relative: (mod) ->
@@ -123,8 +123,7 @@ class Bundle
   _loadPackage: (pack) ->
     Promise.all @_hooks.loadPackage.map (hook) -> hook pack
 
-  _dropPackage: (id) ->
-    pack = @packages[id]
+  _dropPackage: (pack) ->
     pack.bundles.delete this
     if !pack.bundles.size
       pack._purge()

@@ -45,7 +45,7 @@ cush.package = (root, data) ->
 # Internal
 #
 
-streams = Object.create null
+streams = new Map
 
 nodeModulesRE = /^node_modules\//
 nodeModulesExpr = wch.expr
@@ -92,7 +92,7 @@ watchPackage = (pack, root) ->
     err.pack = pack
     cush.emit 'error', err
 
-  streams[pack.id] = stream
+  streams.set pack, stream
   return
 
 # Reset the file's content, and rebuild bundles that use it.
@@ -121,8 +121,8 @@ readPackage = (pack) ->
 # Reset the package cache (for testing).
 Object.defineProperty cush, '_resetPackages', value: ->
   cush.packages = packages = Object.create null
-  Object.values(streams).forEach (s) -> s.destroy()
-  streams = Object.create null
+  streams.forEach (s) -> s.destroy()
+  streams.clear()
   return
 
 # Remove a package from the cache, and stop watching it.
@@ -132,7 +132,7 @@ Package::_purge = ->
   versions.delete @data.version
   if versions.size is 0
     delete packages[@data.name]
-  if stream = streams[@id]
-    delete streams[@id]
+  if stream = streams.get this
+    streams.delete this
     stream.destroy()
   return

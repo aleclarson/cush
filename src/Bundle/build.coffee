@@ -18,7 +18,7 @@ build = (bundle, opts) ->
   missed.length = 0
 
   modules = {}
-  packages = {}
+  packages = []
 
   loading = []   # loading dependencies
   resolved = []  # ordered dependencies (with dupes)
@@ -28,8 +28,8 @@ build = (bundle, opts) ->
 
     # Cache the module and its package.
     modules[file.id] = mod
-    if !packages[pack.id]
-      packages[pack.id] = pack
+    if packages.indexOf(pack) is -1
+      packages.push pack
 
       # Load packages not in the previous build.
       if !bundle.packages[pack.id]
@@ -100,8 +100,8 @@ build = (bundle, opts) ->
     return null
 
   # Purge unused packages.
-  Object.keys(bundle.packages).forEach (id) ->
-    packages[id] or bundle._dropPackage id
+  bundle.packages.forEach (pack) ->
+    ~packages.indexOf(pack) or bundle._dropPackage pack
 
   bundle.modules = modules
   bundle.packages = packages

@@ -4,12 +4,10 @@ crawl = require './crawl'
 cush = require 'cush'
 path = require 'path'
 
-nextId = 1
 nextFileId = 1
 
 class Package
   constructor: (root, data) ->
-    @id = 'p' + nextId++
     @root = root
     @data = data
     @files = Object.create null
