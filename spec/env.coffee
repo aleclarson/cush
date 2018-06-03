@@ -15,6 +15,9 @@ base = temp.track().mkdirSync 'cush-'
 # Make sure SIGINT causes an exit event.
 process.once 'SIGINT', -> process.exit()
 
+# Tell modules they're in a test.
+process.env.TEST = true
+
 # Create a package and add it to `cush.packages`
 env.makePackage = (name, data = {}) ->
   data.name ?= path.basename name
@@ -54,7 +57,7 @@ Bundle::assertMissed = (refs) ->
 
 Bundle::assertModules = (names) ->
   i = -1
-  for id, mod of @modules
+  @_order?.forEach (mod) =>
     assert.equal @relative(mod), names[++i]
   if i + 1 < names.length
     assert.equal undefined, names[i + 1]

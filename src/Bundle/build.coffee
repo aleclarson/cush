@@ -102,6 +102,9 @@ build = (bundle, opts) ->
   bundle.modules = modules
   bundle.packages = packages
 
+  if process.env.TEST
+    bundle._order = new Set resolved
+
   # Create the bundle string.
   bundle._joinModules resolved
 

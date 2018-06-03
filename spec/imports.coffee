@@ -244,7 +244,7 @@ tp.group 'node_modules:', ->
 
     await bun.read()
     bun.assertMissed ['index.js:shark', 'index.js:salmon']
-    bun.assertModules ['index.js', 'node_modules/tuna/index.js']
+    bun.assertModules []
 
   tp.test 'package not installed', (t) ->
     proj.write 'index.js', '''
@@ -255,7 +255,7 @@ tp.group 'node_modules:', ->
 
     await bun.read()
     bun.assertMissed ['index.js:tuna']
-    bun.assertModules ['index.js']
+    bun.assertModules []
 
   tp.test 'two packages depend on different versions', (t) ->
     proj.write 'index.js', '''
