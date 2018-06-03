@@ -54,13 +54,12 @@ build = (bundle, opts) ->
     deps = Object.create null
     mod.imports.forEach ({id}, i) ->
       loading.push do ->
-        dep = deps[id]
 
         # Reserve our position.
         pos = resolved.push(null) - 1
 
         # Avoid resolving the same module twice.
-        if dep is undefined
+        if !dep = deps[id]
           deps[id] = dep =
             resolveImport id, mod, bundle
 
