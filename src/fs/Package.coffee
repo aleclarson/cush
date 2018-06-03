@@ -23,19 +23,21 @@ class Package
 
   file: (name) ->
     file = @files[name]
+    if file is undefined
+      return null
+
     if typeof file is 'string'
       file = @files[name = file]
+
     if file is true
       @files[name] = file =
-        id: 'f' + nextFileId++
+        id: nextFileId++
         name: name
         ext: path.extname name
         content: null
         time: null
         map: null
 
-    else if !file
-      return null
     return file
 
   require: (name) ->

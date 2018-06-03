@@ -17,7 +17,7 @@ build = (bundle, opts) ->
   {missed} = bundle
   missed.length = 0
 
-  modules = {}
+  modules = []
   packages = []
 
   loading = []   # loading dependencies

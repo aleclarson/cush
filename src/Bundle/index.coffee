@@ -15,7 +15,7 @@ class Bundle
     @valid = false    # not outdated?
     @elapsed = null   # time spent building
     @missed = []      # missing dependencies
-    @modules = {}     # used modules
+    @modules = []     # used modules
     @packages = []    # used packages
     @_result = null   # build promise
     @_hooks =
