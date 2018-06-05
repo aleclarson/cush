@@ -36,7 +36,7 @@ cush.bundle = (main, opts) ->
   # Create the bundle.
   bundle = new Bundle opts
   bundle.id = id
-  bundle.main = bundle._getModule main, pack
+  bundle.main = bundle._getModule pack.file(main), pack
   loadFormat bundle
 
   cush.bundles[id] = bundle

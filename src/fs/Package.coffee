@@ -40,6 +40,18 @@ class Package
 
     return file
 
+  search: (name, target, exts) ->
+
+    if ext = path.extname name
+      # prefer target-specific modules
+      pref = name.slice(0, -ext.length) + '.' + target + ext
+      return @file(pref) or @file(name)
+
+    # resolve the file extension
+    matchFile(name, target, exts, this) or
+      # might be a directory name
+      matchFile(name + '/index', target, exts, this)
+
   require: (name) ->
     name = path.join 'node_modules', name
     pack = @files[name]
@@ -65,3 +77,11 @@ tryPackage = (root) ->
       message: err.message
       package: root
     return
+
+# Resolve a filename that has no extension.
+matchFile = (id, target, exts, pack) ->
+  # prefer target-specific modules
+  pref = id + '.' + target
+  for ext in exts
+    file = pack.file(pref + ext) or pack.file(id + ext)
+    return file if file

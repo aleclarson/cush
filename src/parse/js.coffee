@@ -11,7 +11,8 @@ exports.imports = (input) ->
 
     if isRequire(tok) and (tok = getRequireArg next)
       imps.push
-        id: tok.value
+        ref: tok.value
+        module: null
         start: tok.start
         end: tok.end
 

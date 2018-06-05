@@ -1,33 +1,28 @@
-{relative} = require '../utils'
+Resolver = require './Resolver'
 loadFile = require '../fs/loadFile'
-sorcery = require 'sorcery'
 noop = require 'noop'
-path = require 'path'
 cush = require 'cush'
 
 build = (bundle, opts) ->
-  if !bundle.main
-    throw Error 'Bundle must have a main module'
+  timestamp = Date.now()
+  bundle.missed = []
 
-  aborted = ->
-    if !bundle.valid
-      aborted = noop.true
-      return true
+  files = []     # ordered files
+  packages = []  # ordered packages
+  modules = []   # sparse module map (file => module)
 
-  {missed} = bundle
-  missed.length = 0
-
-  modules = []
-  packages = []
-
-  loading = []   # loading dependencies
-  resolved = []  # ordered dependencies (with dupes)
+  pending = []
+  resolve = Resolver bundle, pending
 
   loadModule = (mod) ->
     {file, pack} = mod
 
+    if !modules[file.id]
+      modules[file.id] = mod
+      files.push file
+    else return
+
     # Cache the module and its package.
-    modules[file.id] = mod
     if packages.indexOf(pack) is -1
       packages.push pack
 
@@ -46,124 +41,54 @@ build = (bundle, opts) ->
       mod.map = file.map
       mod.ext = file.ext
       await bundle._loadModule mod
-      mod.imports = await cush._parseImports mod
+      await parseImports mod
 
-    return mod
-
-  resolveImports = (mod) ->
-    deps = Object.create null
-    mod.imports.forEach ({id}, i) ->
-      loading.push do ->
-
-        # Reserve our position.
-        pos = resolved.push(null) - 1
-
-        # Avoid resolving the same module twice.
-        if !dep = deps[id]
-          deps[id] = dep =
-            resolveImport id, mod, bundle
-
-        # Wait for the module to be resolved.
-        resolved[pos] = dep = await dep
-
-        # The module cannot be found.
-        if dep is false
-          missed.push [mod, i]
-          return
-
-        # Ensure the module is loaded once.
-        if !modules[dep.file.id]
-          return loadModule dep
+    # Resolve any imports.
+    await resolve mod
 
   # Load the main module.
-  loaded = [await loadModule bundle.main]
-  resolved[0] = bundle.main
+  await loadModule bundle.main
 
-  # Resolve the imports of every loaded module.
-  while !aborted()
-    loaded.forEach (mod) ->
-      if mod and mod.imports
-        resolveImports mod
+  # Keep loading modules until stopped or finished.
+  while bundle.valid and pending.length
+    await Promise.all (await drain pending).map loadModule
 
-    # Wait for imports to be resolved and loaded.
-    if loading.length
-      loaded = await Promise.all loading
-      loading.length = 0
-    else break
+  # Update the build time.
+  bundle.time = timestamp
 
-  if aborted() or missed.length
+  # Exit early for invalid bundles.
+  if !bundle.valid or bundle.missed.length
     return null
 
   # Purge unused packages.
   bundle.packages.forEach (pack) ->
     ~packages.indexOf(pack) or bundle._dropPackage pack
 
+  bundle.files = files
   bundle.modules = modules
   bundle.packages = packages
 
-  if process.env.TEST
-    bundle._order = new Set resolved
-
   # Create the bundle string.
-  bundle._joinModules resolved
+  bundle._joinModules()
 
 module.exports = build
 
-#
-# Internal
-#
+# Wrap the given queue with Promise.all before emptying it.
+drain = (queue) ->
+  promise = Promise.all queue
+  queue.length = 0
+  promise
 
-scopedRE = /^((?:@[a-z._-]+\/)?[a-z._-]+)(?:\/(.+))?$/
+# Parse the imports of a module, and reuse old resolutions.
+parseImports = (mod) ->
 
-resolveImport = (ref, mod, bundle) ->
-  {file, pack} = mod
+  if mod.deps
+    prev = Object.create null
+    mod.deps.forEach (dep) ->
+      prev[dep.ref] = dep.module
+      return
 
-  # ./ or ../
-  if ref[0] is '.'
-    id = relative file.name, ref
-    if id is null
-      cush.emit 'warning',
-        message: 'Unsupported import path: ' + ref
-        module: mod
-      return false
-
-    # use the main module if referencing package root
-    if !id and !id = resolveMain pack
-      cush.emit 'warning',
-        message: '"main" path is invalid: ' + pack.root
-        package: pack
-      return false
-
-  # node_modules
-  else if !path.isAbsolute ref
-    if match = scopedRE.exec ref
-
-      deps = pack.data.dependencies
-      if !deps or !deps[match[1]]
-        return false
-
-      if !pack = pack.require match[1]
-        return false
-
-      # use the main module if nothing follows the package name
-      if !id = match[2] or resolveMain pack
-        cush.emit 'warning',
-          message: '"main" path is invalid: ' + pack.root
-          package: pack
-        return false
-
-  else # absolute paths are forbidden 💥
-    cush.emit 'warning',
-      message: 'Import path must be relative'
-      module: mod
-    return false
-
-  await pack.crawl()
-  bundle._getModule id, pack
-
-resolveMain = (pack) ->
-  if id = pack.data.main
-    if id[0] is '.'
-      relative '', id
-    else id
-  else 'index'
+  mod.deps = await cush._parseImports mod
+  if prev then mod.deps.forEach (dep) ->
+    dep.module = prev[dep.ref] or null
+    return

@@ -12,11 +12,13 @@ class Bundle
     @main = null
     @opts = opts
     @map = null       # sourcemap object
+    @time = 0         # time of last build
     @valid = false    # not outdated?
     @elapsed = null   # time spent building
+    @files = []       # ordered files
+    @packages = []    # ordered packages
+    @modules = []     # sparse module map
     @missed = []      # missing dependencies
-    @modules = []     # used modules
-    @packages = []    # used packages
     @_result = null   # build promise
     @_hooks =
       loadPackage: []
@@ -76,30 +78,17 @@ class Bundle
         .then @_build.bind this
     return this
 
-  # Return a Module object for the given filename.
-  _getModule: (id, pack) ->
-    {target} = @opts
-
-    if ext = path.extname id
-      # prefer target-specific modules
-      pref = id.slice(0, -ext.length) + '.' + target + ext
-      file = pack.file(pref) or pack.file(id)
-    else
-      file = matchFile id, pack, target, @exts
-      file ?= matchFile id + '/index', pack, target, @exts
-
-    if !file
-      return false
-
+  # Return a Module object for the given file object.
+  _getModule: (file, pack) ->
     if !mod = @modules[file.id]
       # New modules are put in the previous build's module cache.
       # When the new build finishes, old modules are released.
       @modules[file.id] = mod = {
         file, pack
         content: null
-        imports: null
-        map: null
-        ext: null
+        deps: null    # ordered dependency objects
+        map: null     # sourcemap
+        ext: null     # file extension
       }
 
     return mod
@@ -133,14 +122,6 @@ class Bundle
     throw Error 'Bundle format must override `_joinModules`'
 
 module.exports = Bundle
-
-# Try every implicit extension until the ambiguous filename is resolved.
-matchFile = (id, pack, target, exts) ->
-  # prefer target-specific modules
-  pref = id + '.' + target
-  for ext in exts
-    file = pack.file(pref + ext) or pack.file(id + ext)
-    return file if file
 
 # Create a function that enforces a minimum delay.
 noEarlier = (time) ->

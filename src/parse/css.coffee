@@ -14,8 +14,9 @@ exports.imports = (css) ->
       tok = after 'space', next
       if tok and tok[0] is 'string'
         imps.push
-          id: eval tok[1]
+          ref: eval tok[1]
           line: tok[2]
+          module: null
 
     else if !skipRE.test tok[0]
       break
