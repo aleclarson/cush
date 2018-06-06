@@ -47,7 +47,7 @@ cush.package = (root, data) ->
 
 streams = new Map
 
-nodeModulesRE = /^node_modules\//
+nodeModulesRE = /(^|\/)node_modules\//
 nodeModulesExpr = wch.expr
   only: ['/node_modules/*/package.json', '/node_modules/@*/*/package.json']
   type: 'f'
