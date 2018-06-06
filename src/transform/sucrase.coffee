@@ -11,7 +11,7 @@ transform = (file, pack) ->
 
   tforms = []
 
-  if /\bimport\b/.test file.content
+  if /\b(import|export)\b/.test file.content
     tforms.push 'imports'
 
   if jsxRE.test file.ext
