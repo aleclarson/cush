@@ -15,14 +15,14 @@ build = (bundle, opts) ->
   resolve = Resolver bundle, pending
 
   loadModule = (mod) ->
+    return if !mod or modules[mod.file.id]
     {file, pack} = mod
 
-    if !modules[file.id]
-      modules[file.id] = mod
-      files.push file
-    else return
+    # Cache the module.
+    modules[file.id] = mod
+    files.push file
 
-    # Cache the module and its package.
+    # Cache its package.
     if packages.indexOf(pack) is -1
       packages.push pack
 
