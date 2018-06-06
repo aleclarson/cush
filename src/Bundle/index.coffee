@@ -11,7 +11,6 @@ class Bundle
   constructor: (opts) ->
     @main = null
     @opts = opts
-    @map = null       # sourcemap object
     @time = 0         # time of last build
     @valid = false    # not outdated?
     @elapsed = null   # time spent building

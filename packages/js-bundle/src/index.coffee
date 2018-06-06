@@ -1,5 +1,6 @@
 ModuleNamer = require './ModuleNamer'
 MagicString = require 'magic-string'
+sorcery = require 'sorcery'
 cush = require 'cush'
 fs = require 'saxon/sync'
 
@@ -32,11 +33,17 @@ self.mixin =
     result.prepend "window.env = '#{target}';\n"
     dev and result.prepend 'window.dev = true;\n'
 
+    # module lookup by path (relative to project root)
+    modules = {}
+
     getModuleName = ModuleNamer this
     @files.forEach (file) =>
       mod = @modules[file.id]
-      filename = @relative mod
       str = new MagicString mod.content
+
+      # store module by path (for source mapping)
+      filename = @relative mod
+      modules[filename] = mod
 
       # swap out any `require` calls
       mod.deps.forEach (dep) ->
@@ -54,10 +61,14 @@ self.mixin =
       # add to the bundle
       result.addSource {filename, content: str}
 
-    @map = result.generateMap
-      includeContent: dev
+    # create the bundle string
+    result =
+      content: result.toString()
+      map: result.generateMap
+        includeContent: false
 
-    # dev bundles use inline sourcemaps
-    dev and result.append '\n\n//# sourceMappingURL=' + @map.toUrl()
+    # trace the mappings to their original sources
+    result.map = sorcery result,
+      getMap: (filename) -> modules[filename].map or false
 
-    result.toString()
+    result
