@@ -14,7 +14,7 @@ self.type = 'js'
 self.exts = ['.js', '.ts', '.coffee', '.jsx', '.tsx']
 
 self.plugins = [
-  # require './plugins/buble'
+  require './plugins/buble'
   require './plugins/nebu'
   # require './plugins/uglify'
 ]
