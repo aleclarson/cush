@@ -1,7 +1,5 @@
-t = require('elapse')('load sucrase')
 sucrase = require('sucrase').transform
-t.stop()
-
+cush = require 'cush'
 path = require 'path'
 
 tsRE = /^\.tsx?$/
@@ -28,12 +26,20 @@ transform = (file, pack) ->
   if !tforms.length
     return
 
-  file.ext = '.js'
-  file.content =
+  filename = path.join pack.root, file.name
+  try file.content =
     sucrase file.content,
-      filePath: path.join(pack.root, file.name)
+      filePath: filename
       transforms: tforms
 
+  catch err
+    cush.emit 'warning',
+      message: 'sucrase threw an error: ' +
+        (cush.verbose and err.stack or err.message)
+      file: filename
+    return
+
+  file.ext = '.js'
   file._sucrase = file.time
   return
 
