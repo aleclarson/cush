@@ -5,9 +5,7 @@ fs = require 'saxon'
 loadFile = (file, pack) ->
 
   # Read the file.
-  if file.content is null
-    file.content = await fs.read path.join(pack.root, file.name)
-    file.time = Date.now()
+  file.content ?= await fs.read path.join(pack.root, file.name)
 
   # Transform the file.
   try while true
