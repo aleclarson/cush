@@ -44,7 +44,8 @@ build = (bundle, opts) ->
       await parseImports mod
 
     # Resolve any imports.
-    await resolve mod
+    if mod.deps
+      await resolve mod
 
   # Load the main module.
   await loadModule bundle.main

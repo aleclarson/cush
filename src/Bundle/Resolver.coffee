@@ -57,7 +57,6 @@ Resolver = (bundle, resolved) ->
 
   # Resolve all dependencies of a module.
   return (parent) ->
-    return if !parent.deps
     modules = {}
     parent.deps.forEach (dep, i) ->
       mod = dep.module
