@@ -10,7 +10,7 @@
     var loader = loaders[id];
     if (loader) {
       var exports = {};
-      factory(module = {exports}, exports);
+      loader(module = {exports}, exports);
       loaded[id] = module;
       return module.exports;
     }
