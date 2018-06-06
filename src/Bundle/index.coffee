@@ -115,7 +115,7 @@ class Bundle
   _dropPackage: (pack) ->
     pack.bundles.delete this
     if !pack.bundles.size
-      pack._purge()
+      pack._unload()
     return this
 
   _joinModules: (modules) ->

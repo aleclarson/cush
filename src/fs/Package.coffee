@@ -11,6 +11,8 @@ class Package
     @root = root
     @data = data
     @files = Object.create null
+    @users = new Set
+    @parent = null
     @bundles = new Set
     @exclude = []
     @crawled = false
@@ -54,10 +56,11 @@ class Package
 
   require: (name) ->
     name = path.join 'node_modules', name
-    pack = @files[name]
-    if isObject pack
+    if pack = @files[name]
       return pack
     if pack = tryPackage path.join @root, name
+      pack.parent or= this
+      pack.users.add this
       @files[name] = pack
       return pack
     return null

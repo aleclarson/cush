@@ -81,7 +81,7 @@ watchPackage = (pack, root) ->
 
       # Unload the package if we own it.
       if pack is dep.parent
-        return dep._purge()
+        return dep._unload()
 
     else
       evt.pack = pack
@@ -154,12 +154,45 @@ Object.defineProperty cush, '_resetPackages', value: ->
   return
 
 # Remove a package from the cache, and stop watching it.
-Package::_purge = ->
-  @_purge = noop
+Package::_unload = ->
+  @_unload = noop
+
+  # Update the times of our files,
+  # and unlink our dependencies.
+  now = Date.now()
+  for name, file of @files
+    continue if !isObject file
+
+    if file.name
+      file.time = now
+      continue
+
+    file.users.delete this
+    if this is file.parent
+      file._unload()
+
+  # Destroy the file cache.
+  @files = null
+
+  # Update our dependent packages.
+  name = path.join 'node_modules', @data.name
+  @users.forEach (user) ->
+    delete user.files[name]
+
+  # Invalidate any bundles.
+  if @bundles.size
+    @bundles.forEach (bundle) ->
+      bundle.valid = false  # Disable automatic rebuilds (temporarily).
+      bundle._result = null
+      return
+
+  # Remove from the package cache.
   versions = packages[@data.name]
   versions.delete @data.version
   if versions.size is 0
     delete packages[@data.name]
+
+  # Stop watching.
   if stream = streams.get this
     streams.delete this
     stream.destroy()
