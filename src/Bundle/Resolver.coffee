@@ -60,7 +60,7 @@ Resolver = (bundle, resolved) ->
     modules = {}
     parent.deps.forEach (dep, i) ->
       mod = dep.module
-      if !mod or mod.file.time > bundle.time
+      if !mod or !mod.file.id
 
         # Never resolve the same ref twice.
         if !mod = modules[dep.ref]

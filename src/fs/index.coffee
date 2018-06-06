@@ -49,8 +49,8 @@ streams = new Map
 
 nodeModulesRE = /^node_modules\//
 nodeModulesExpr = wch.expr
-  only: ['/node_modules/*', '/node_modules/@*/*']
-  type: 'dl'
+  only: ['/node_modules/*/package.json', '/node_modules/@*/*/package.json']
+  type: 'f'
 
 excludeLocals = (dep) ->
   if dep.indexOf('file:./') is 0
@@ -65,27 +65,55 @@ watchPackage = (pack, root) ->
     fields: ['name', 'exists', 'new']
     since: 1 + Math.ceil Date.now() / 1000
 
-  stream.on 'data', (file) ->
+  stream.on 'data', (evt) ->
+    return if evt.name is '/'
 
-    if file.name is '/'
-      pack.bundles.clear()
-      return pack._purge()
+    if nodeModulesRE.test evt.name
+      # Skip new packages.
+      return if evt.new
 
-    if !nodeModulesRE.test file.name
-      file.pack = pack
-      process.nextTick cush.emit, 'change', file
+      # Skip unused packages.
+      evt.name = path.dirname evt.name
+      return if !dep = pack.files[evt.name]
 
-      if file.new
-        pack.files[file.name] = true
+      # Skip packages with unchanged name/version.
+      return if evt.exists and readPackage dep
+
+      # Unload the package if we own it.
+      if pack is dep.parent
+        return dep._purge()
+
+    else
+      evt.pack = pack
+      process.nextTick cush.emit, 'change', evt
+
+      if evt.new
+        pack.files[evt.name] = true
         return
 
-      if file.exists
-        unloadFile pack.files[file.name], pack
-        readPackage pack if file.name is 'package.json'
+      # Packages without a parent must reload their own data.
+      if !pack.parent and evt.name is 'package.json'
+        readPackage pack
+
+      file = pack.files[evt.name]
+      if isObject file
+
+        # Rebuild bundles that use this file.
+        pack.bundles.forEach (bundle) ->
+          bundle._unloadModule file.id
+
+        if evt.exists
+          return unloadFile file
+
+        # Mark the file as deleted.
+        file.id = 0
+
+      # Keep modified files in memory.
+      else if evt.exists
         return
 
-    # Remove old files and packages.
-    delete pack.files[file.name]
+    # Remove deleted files and stale packages.
+    delete pack.files[evt.name]
 
   stream.on 'error', (err) ->
     err.root = root
@@ -95,28 +123,28 @@ watchPackage = (pack, root) ->
   streams.set pack, stream
   return
 
-# Reset the file's content, and rebuild bundles that use it.
-unloadFile = (file, pack) ->
-  if isObject(file) and file.content isnt null
-    content = fs.read path.join(pack.root, file.name)
-    if content isnt file.content
-      file.ext = path.extname file.name
-      file.content = content
-      file.time = Date.now()
-      file.map = null
+# Unload the file's content.
+unloadFile = (file) ->
+  if file.content isnt null
+    file.ext = path.extname file.name
+    file.content = null
+    file.time = Date.now()
+    file.map = null
+  return
 
-      # Only changed files trigger rebuilds.
-      pack.bundles.forEach (bundle) ->
-        bundle._unloadModule file.id
-
+# Returns false if "package.json" has a new name/version or does not exist.
 readPackage = (pack) ->
   {name, version} = pack.data
-  try data = evalFile file.path
-  catch e then return
+  try
+    data = evalFile path.join(pack.root, 'package.json')
+    if (name is data.name) and (version is data.version)
+      pack.data = data
+      return true
+    return false
 
-  # Purge packages with new name/version.
-  if (name isnt data.name) or (version isnt data.version)
-    return pack._purge()
+  catch err
+    # Be forgiving about malformed JSON.
+    return err.name is 'SyntaxError'
 
 # Reset the package cache (for testing).
 Object.defineProperty cush, '_resetPackages', value: ->
