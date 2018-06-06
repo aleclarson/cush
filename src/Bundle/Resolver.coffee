@@ -60,31 +60,27 @@ Resolver = (bundle, resolved) ->
     return if !parent.deps
     modules = {}
     parent.deps.forEach (dep, i) ->
-      # Have we resolved this before?
-      if mod = dep.module
+      mod = dep.module
+      if !mod or mod.file.time > bundle.time
 
-        # Has this module changed since last build?
-        if mod.file.time < bundle.time
-          if !modules[dep.ref]
-            modules[dep.ref] = mod
-            resolved.push mod
+        # Never resolve the same ref twice.
+        if !mod = modules[dep.ref]
+          modules[dep.ref] = mod =
+            resolveImport parent, dep.ref
+          resolved.push mod
+
+        if mod = await mod
+          dep.module = mod
           return
 
-        # The result is stale.
-        dep.module = null
-
-      # Never resolve the same ref twice.
-      if !mod = modules[dep.ref]
-        modules[dep.ref] = mod =
-          resolveImport parent, dep.ref
-        resolved.push mod
-
-      if mod = await mod
-        dep.module = mod
+        # The module cannot be found.
+        missed.push [parent, i]
         return
 
-      # The module cannot be found.
-      missed.push [mod, i]
+      # The module is good to reuse. ✨
+      if !modules[dep.ref]
+        modules[dep.ref] = mod
+        resolved.push mod
       return
 
 module.exports = Resolver
