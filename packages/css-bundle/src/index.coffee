@@ -2,6 +2,8 @@ cush = require 'cush'
 
 self = exports
 
+self.name = 'StyleSheet'
+
 self.exts = ['.css', '.scss', '.sass']
 
 self.plugins = [

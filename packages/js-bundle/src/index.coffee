@@ -9,7 +9,7 @@ polyfills =
 
 self = exports
 
-self.type = 'js'
+self.name = 'JavaScript'
 
 self.exts = ['.js', '.ts', '.coffee', '.jsx', '.tsx']
 

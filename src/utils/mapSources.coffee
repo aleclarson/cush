@@ -1,4 +1,4 @@
-sorcery = require 'sorcery'
+sorcery = require '@cush/sorcery'
 
 # Update the sourcemap of a file.
 mapSources = (file, result) ->
