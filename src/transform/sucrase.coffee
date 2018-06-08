@@ -1,4 +1,4 @@
-sucrase = require('sucrase').transform
+sucrase = require('@cush/sucrase').transform
 cush = require 'cush'
 path = require 'path'
 
