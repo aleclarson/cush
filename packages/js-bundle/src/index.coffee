@@ -39,7 +39,7 @@ self.mixin =
     getModuleName = ModuleNamer this
     @files.forEach (file) =>
       mod = @modules[file.id]
-      str = new MagicString mod.content
+      code = new MagicString mod.content
 
       # store module by path (for source mapping)
       filename = @relative mod
@@ -47,19 +47,19 @@ self.mixin =
 
       # swap out any `require` calls
       mod.deps.forEach (dep) ->
-        str.overwrite dep.start, dep.end, getModuleName(dep.module)
+        code.overwrite dep.start, dep.end, getModuleName(dep.module)
 
       # wrap modules with a `__d` call
-      str.trim()
-      str.indent '  '
-      str.prepend "/* #{filename} */\n" if dev
-      str.prependRight 0, """
+      code.trim()
+      code.indent '  '
+      code.prepend "/* #{filename} */\n" if dev
+      code.prependRight 0, """
         __d(#{getModuleName mod}, function(module, exports) {\n
       """
-      str.append '\n});\n'
+      code.append '\n});\n'
 
       # add to the bundle
-      result.addSource {filename, content: str}
+      result.addSource {filename, content: code}
 
     # require the main module
     result.append "\nrequire(#{getModuleName @main});"
