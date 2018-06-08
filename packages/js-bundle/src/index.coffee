@@ -73,5 +73,6 @@ self.mixin =
     # trace the mappings to their original sources
     result.map = sorcery result,
       getMap: (filename) -> modules[filename].map or false
+      includeContent: false
 
     result
