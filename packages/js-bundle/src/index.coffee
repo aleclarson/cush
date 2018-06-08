@@ -61,6 +61,9 @@ self.mixin =
       # add to the bundle
       result.addSource {filename, content: str}
 
+    # require the main module
+    result.append "\nrequire(#{getModuleName @main});"
+
     # create the bundle string
     result =
       content: result.toString()
