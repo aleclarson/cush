@@ -22,5 +22,5 @@ module.exports = (bundle, opts) ->
         file: path.join mod.pack.root, mod.file.name
       return
 
-    if mod.content isnt res.content
+    if res.map
       mapSources mod, res

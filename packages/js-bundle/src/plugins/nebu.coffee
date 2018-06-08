@@ -31,7 +31,7 @@ module.exports = (bundle, opts) ->
     try
       config.filename = path.join mod.pack.root, mod.file.name
       res = nebu.process mod.content, config
-      if mod.content isnt res.js
+      if res.map
         res.content = res.js
         mapSources mod, res
 
