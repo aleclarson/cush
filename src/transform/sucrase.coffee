@@ -9,10 +9,7 @@ jsxRE = /^\.(?:t|j)sx$/
 transform = (file, pack) ->
   return if file._sucrase is file.time
 
-  tforms = []
-
-  if /\b(import|export)\b/.test file.content
-    tforms.push 'imports'
+  tforms = ['imports']
 
   if jsxRE.test file.ext
     tforms.push 'jsx'
@@ -22,9 +19,6 @@ transform = (file, pack) ->
 
   else if isFlow pack
     tforms.push 'flow'
-
-  if !tforms.length
-    return
 
   filename = path.join pack.root, file.name
   try file.content =
