@@ -25,6 +25,7 @@ transform = (file, pack) ->
     sucrase file.content,
       filePath: filename
       transforms: tforms
+      enableLegacyBabel5ModuleInterop: true
 
   catch err
     cush.emit 'warning',
