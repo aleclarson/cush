@@ -27,7 +27,7 @@ self.mixin =
     result = new MagicString.Bundle
 
     # polyfills
-    result.prepend polyfills.require
+    result.prepend polyfills.require + '\n'
 
     # global variables
     result.prepend "window.env = '#{target}';\n"
@@ -52,11 +52,11 @@ self.mixin =
       # wrap modules with a `__d` call
       str.trim()
       str.indent '  '
-      str.prepend "\n/* #{filename} */\n" if dev
+      str.prepend "/* #{filename} */\n" if dev
       str.prependRight 0, """
         __d(#{getModuleName mod}, function(module, exports) {\n
       """
-      str.append '\n});'
+      str.append '\n});\n'
 
       # add to the bundle
       result.addSource {filename, content: str}
