@@ -60,10 +60,10 @@ loadFormat = (bundle) ->
   if !form
     throw Error 'Bundle has no matching format'
 
-  if !form.type
-    throw Error 'Bundle format has no "type" property'
+  if !form.name
+    throw Error 'Bundle format has no "name" property'
 
-  bundle.type = form.type
+  bundle.format = form.name
   bundle.exts = form.exts or []
 
   if plugs = form.plugins
