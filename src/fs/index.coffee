@@ -116,9 +116,11 @@ watchPackage = (pack, root) ->
     delete pack.files[evt.name]
 
   stream.on 'error', (err) ->
-    err.root = root
-    err.pack = pack
-    cush.emit 'error', err
+    cush.emit 'error',
+      message: 'An error occurred on a watch stream'
+      error: err
+      root: root
+      pack: pack
 
   streams.set pack, stream
   return

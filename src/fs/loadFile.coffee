@@ -15,7 +15,10 @@ loadFile = (file, pack) ->
       break if ext is file.ext
     else break
   catch err
-    cush.emit 'error', err
+    cush.emit 'error',
+      message: 'Failed to transform a file'
+      error: err
+      file: path.join(pack.root, file.name)
 
   return file
 
