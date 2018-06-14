@@ -17,8 +17,10 @@ cush.bundle = (main, opts) ->
   if !path.isAbsolute main
     main = path.resolve main
 
-  id = getBundleId main, opts.target, opts.dev
-  return bundle if bundle = cush.bundles[id]
+  id = sha256(main).slice(0, 7) + '.' + opts.target
+  id += '.dev' if opts.dev
+  if bundle = cush.bundles[id]
+    return bundle
 
   # Get the main package.
   if root = findPackage main
@@ -45,10 +47,6 @@ cush.bundle = (main, opts) ->
 #
 # Internal
 #
-
-getBundleId = (main, target, dev) ->
-  id = sha256(main).slice(0, 7) + '.' + target
-  dev and id + '.dev' or id
 
 loadFormat = (bundle) ->
   ext = bundle.main.file.ext
