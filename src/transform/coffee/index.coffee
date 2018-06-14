@@ -1,4 +1,4 @@
-{lazyRequire, mapSources} = require '../utils'
+{lazyRequire, mapSources} = require '../../utils'
 semver = require 'semver'
 cush = require 'cush'
 path = require 'path'
