@@ -36,13 +36,13 @@ cush.bundle = (main, opts) ->
   pack.files[main] or= true
 
   # Create the bundle.
-  bundle = new Bundle opts
+  bundle = new Bundle opts.dev, opts.target
   bundle.id = id
   bundle.main = bundle._getModule pack.file(main), pack
   loadFormat bundle
 
   cush.bundles[id] = bundle
-  return bundle
+  return bundle._configure()
 
 #
 # Internal
@@ -61,12 +61,8 @@ loadFormat = (bundle) ->
   if !form.name
     throw Error 'Bundle format has no "name" property'
 
-  bundle.format = form.name
-  bundle.exts = form.exts or []
-
-  if plugs = form.plugins
-    for plug in plugs
-      bundle.use plug
+  bundle.exts = form.exts and form.exts[..] or []
+  bundle._form = form
 
   if form.mixin
     for key, value of form.mixin

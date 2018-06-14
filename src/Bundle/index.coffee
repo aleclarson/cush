@@ -1,16 +1,16 @@
-{merge, findPackage, sha256} = require 'cush/utils'
-sorcery = require '@cush/sorcery'
-Plugin = require './Plugin'
-assert = require 'assert'
+BundleConfig = require './Config'
 build = require './build'
 noop = require 'noop'
 path = require 'path'
 cush = require 'cush'
 
 class Bundle
-  constructor: (opts) ->
-    @main = null
-    @opts = opts
+  constructor: (dev, target) ->
+    @id = null        # bundle identifier
+    @dev = dev        # development mode
+    @target = target  # targeted platform
+    @main = null      # the main module
+    @exts = null      # implicit file extensions
     @time = 0         # time of last build
     @valid = false    # not outdated?
     @elapsed = null   # time spent building
@@ -18,17 +18,9 @@ class Bundle
     @packages = []    # ordered packages
     @modules = []     # sparse module map
     @missed = []      # missing dependencies
+    @_form = null     # bundle format
+    @_hooks = null    # bundle hooks
     @_result = null   # build promise
-    @_hooks =
-      loadPackage: []
-      loadModule: {}
-
-  use: (init) ->
-    if typeof init isnt 'function'
-      init = require init
-    plug = new Plugin @_hooks
-    init.call plug, this, @opts
-    return this
 
   read: ->
     @_result or= @_build()
@@ -45,6 +37,11 @@ class Bundle
   relative: (mod) ->
     throw Error 'Expected a module' if !mod or !mod.pack
     path.relative @main.pack.root, path.join(mod.pack.root, mod.file.name)
+
+  _configure: ->
+    config = new BundleConfig @dev, @target
+    @_hooks = config._load @main.pack, @_form
+    return this
 
   _build: -> try
     @valid = true
@@ -94,7 +91,7 @@ class Bundle
 
   # Run hooks for a module.
   _loadModule: (mod) ->
-    if hooks = @_hooks.loadModule[mod.ext]
+    if hooks = @_hooks._module[mod.ext]
       i = -1; ext = mod.ext
       while ++i < hooks.length
         await hooks[i] mod
@@ -109,7 +106,7 @@ class Bundle
 
   # Run hooks for a package.
   _loadPackage: (pack) ->
-    Promise.all @_hooks.loadPackage.map (hook) -> hook pack
+    Promise.all @_hooks._package.map (hook) -> hook pack
 
   _dropPackage: (pack) ->
     pack.bundles.delete this

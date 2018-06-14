@@ -4,8 +4,7 @@ path = require 'path'
 scopedRE = /^((?:@[a-z._-]+\/)?[a-z._-]+)(?:\/(.+))?$/
 
 Resolver = (bundle, resolved) ->
-  {exts, missed} = bundle
-  {target} = bundle.opts
+  {target, exts, missed} = bundle
 
   resolveImport = (parent, ref) ->
     {file, pack} = parent
