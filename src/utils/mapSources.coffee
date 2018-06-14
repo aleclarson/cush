@@ -1,14 +1,15 @@
 sorcery = require '@cush/sorcery'
 
 # Update the sourcemap of a file.
-mapSources = (file, result) ->
+mapSources = (source, result) ->
 
-  file.map =
-    if file.map
-    then sorcery [result, file], includeContent: false
+  source.map =
+    if source.map
+    then sorcery [result, source],
+      includeContent: false
     else result.map
 
-  file.content = result.content
+  source.content = result.content
   return
 
 module.exports = mapSources
