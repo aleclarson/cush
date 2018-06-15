@@ -4,11 +4,11 @@ path = require 'path'
 
 tforms = {modules: false}
 
-module.exports = (bundle, opts) ->
+module.exports = ->
   buble = require '@cush/buble'
   buble.parse = require('acorn').parse
 
-  @loadModules '.js', (mod) ->
+  @hookModules '.js', (mod) ->
 
     try res = buble.transform mod.content,
       includeContent: false

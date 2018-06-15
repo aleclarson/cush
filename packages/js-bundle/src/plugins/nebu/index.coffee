@@ -6,16 +6,16 @@ fs = require 'saxon'
 nebu = require '@cush/nebu'
 nebu.acorn = require 'acorn'
 
-module.exports = (bundle, opts) ->
+module.exports = ->
   packs = new WeakMap
   shared =
     sourceMaps: true
     plugins: []
 
-  if opts.nebu?.plugins
-    shared.plugins.push opts.nebu.plugins
+  if plugs = @get 'nebu.plugins'
+    shared.plugins.push plugs
 
-  @loadPackages (pack) ->
+  @hookPackages (pack) ->
     if config = await loadConfig pack.root
       {plugins} = config
       Object.assign config, shared
@@ -25,7 +25,7 @@ module.exports = (bundle, opts) ->
     packs.set pack, config or shared
     return
 
-  @loadModules '.js', (mod) ->
+  @hookModules '.js', (mod) ->
     config = Object.create packs.get(mod.pack)
     return if !config.plugins.length
     try
