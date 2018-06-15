@@ -16,7 +16,7 @@ self.exts = ['.js', '.ts', '.coffee', '.jsx', '.tsx']
 self.plugins = [
   require './plugins/nebu'
   require './plugins/buble'
-  # require './plugins/uglify'
+  require './plugins/uglify'
 ]
 
 self.mixin =
