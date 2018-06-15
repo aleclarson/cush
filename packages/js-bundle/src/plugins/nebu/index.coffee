@@ -45,7 +45,7 @@ module.exports = (bundle, opts) ->
 # TODO: watch `nebu.config.js` for changes
 loadConfig = (root) ->
   configPath = path.join root, 'nebu.config.js'
-  if await fs.isFile root
+  if await fs.isFile configPath
     config = evalFile configPath
     if Array.isArray config
       plugins: config
