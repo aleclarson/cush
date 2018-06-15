@@ -1,5 +1,5 @@
 ModuleNamer = require './ModuleNamer'
-MagicString = require 'magic-string'
+MagicString = require '@cush/magic-string'
 sorcery = require '@cush/sorcery'
 cush = require 'cush'
 fs = require 'saxon/sync'
