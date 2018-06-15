@@ -22,16 +22,10 @@ self.plugins = [
 self.mixin =
 
   _joinModules: ->
-    {target, dev} = @opts
-
     result = new MagicString.Bundle
 
     # polyfills
     result.prepend polyfills.require + '\n'
-
-    # global variables
-    result.prepend "window.env = '#{target}';\n"
-    dev and result.prepend 'window.dev = true;\n'
 
     # module lookup by path (relative to project root)
     modules = {}
@@ -52,7 +46,7 @@ self.mixin =
       # wrap modules with a `__d` call
       code.trim()
       code.indent '  '
-      code.prepend "/* #{filename} */\n" if dev
+      code.prepend "/* #{filename} */\n" if @dev
       code.prependRight 0, """
         __d(#{getModuleName mod}, function(module, exports) {\n
       """

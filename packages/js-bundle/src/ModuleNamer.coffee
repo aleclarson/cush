@@ -1,6 +1,6 @@
 
 ModuleNamer = (bundle) ->
-  if !bundle.opts.dev
+  if !bundle.dev
     return (mod) -> String(mod.file.id)
 
   # Resolve package names.
