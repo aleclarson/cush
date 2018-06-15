@@ -21,14 +21,14 @@ module.exports = ->
       Object.assign config, shared
       if Array.isArray plugins
         config.plugins = plugins.concat shared.plugins
-
-    packs.set pack, config or shared
-    return
+      packs.set pack, config
+      return
 
   @hookModules '.js', (mod) ->
-    config = Object.create packs.get(mod.pack)
+    config = packs.get(mod.pack) or shared
     return if !config.plugins.length
     try
+      config = Object.create config
       config.filename = path.join mod.pack.root, mod.file.name
       res = nebu.process mod.content, config
       if res.map
