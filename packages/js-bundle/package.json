@@ -7,6 +7,7 @@
     "prepublishOnly": "prepv -i || true"
   },
   "dependencies": {
+    "@cush/uglify-js": "^3.4.0",
     "cush": "file:../.."
   },
   "devDependencies": {
