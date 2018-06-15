@@ -15,6 +15,8 @@ module.exports = ->
   if plugs = @get 'nebu.plugins'
     shared.plugins.push plugs
 
+  doneHook = @hook 'nebu'
+
   @hookPackages (pack) ->
     if config = await loadConfig pack.root
       {plugins} = config
@@ -29,8 +31,10 @@ module.exports = ->
     return if !config.plugins.length
     try
       config = Object.create config
+      config.state = {}
       config.filename = path.join mod.pack.root, mod.file.name
       res = nebu.process mod.content, config
+      doneHook.run mod, config.state
       if res.map
         res.content = res.js
         mapSources mod, res
