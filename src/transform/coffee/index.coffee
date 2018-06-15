@@ -30,19 +30,17 @@ transform = (file, pack) ->
     return
 
   {compile} = pack.coffee
-  try res = compile file.content,
+  res = compile file.content,
     filename: filename
     sourceMap: true
     bare: true
 
-  catch err
-    cush.emit 'error', err
-    throw err
+  res.content = res.js
+  res.map = JSON.parse res.v3SourceMap
+  mapSources file, res
 
   file.ext = '.js'
-  mapSources file,
-    content: res.js
-    map: JSON.parse res.v3SourceMap
+  return
 
 exports['.coffee'] =
 exports['.coffee.md'] =
