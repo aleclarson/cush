@@ -75,6 +75,12 @@ class BundleConfig
     return hook
 
   hookModules: (ext, fn) ->
+
+    if Array.isArray ext
+      ext.forEach (ext) =>
+        @hookModules ext, fn
+      return fn
+
     hooks = @_moduleHooks[ext] or= []
     hooks.push fn
     return fn
