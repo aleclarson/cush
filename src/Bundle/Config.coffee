@@ -99,6 +99,7 @@ class BundleConfig
 
     hooks = @_hooks
     hooks.config = new BundleHook
+    hooks.bundle = new BundleHook
     try
       form.plugins?.forEach (plugin) =>
         plugin.call this
