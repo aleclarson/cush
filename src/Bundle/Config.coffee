@@ -89,6 +89,10 @@ class BundleConfig
     @_packageHooks.push fn
     return fn
 
+  relative: (mod) ->
+    throw Error 'Expected a module' if !mod or !mod.pack
+    path.join(mod.pack.root, mod.file.name).slice @root.length + 1
+
   _load: (pack, form) ->
     @root = pack.root
     @pack = pack.data
