@@ -36,7 +36,7 @@ class Bundle
 
   relative: (mod) ->
     throw Error 'Expected a module' if !mod or !mod.pack
-    path.relative @main.pack.root, path.join(mod.pack.root, mod.file.name)
+    path.join(mod.pack.root, mod.file.name).slice @main.pack.root.length + 1
 
   _configure: ->
     config = new BundleConfig @dev, @target
