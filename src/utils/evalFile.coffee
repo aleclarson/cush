@@ -3,8 +3,9 @@ path = require 'path'
 fs = require 'saxon/sync'
 
 evalFile = (file) ->
-  return load file if load = loaders[path.extname file]
-  throw Error "Cannot eval '#{file}' without a loader"
+  if !load = loaders[path.extname file]
+    throw Error "Cannot eval '#{file}' without a loader"
+  fs.isFile(file) and load(file) or null
 
 loaders =
 
