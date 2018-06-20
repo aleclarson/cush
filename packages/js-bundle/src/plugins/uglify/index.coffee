@@ -34,12 +34,16 @@ setup = (options) ->
 
   uglify = require('@cush/uglify-js').minify
 
-  @hookModules '.js', (mod) =>
+  {root} = this
+  @hookModules '.js', (mod) ->
+    filename = path.join mod.pack.root, mod.file.name
+
     res = uglify mod.content, options
     if !res.error
+      res.map.sources[0] = path.relative root, filename
       return mapSources mod, res
 
     cush.emit 'warning',
       message: res.error
-      file: path.join(mod.pack.root, mod.file.name)
+      file: filename
     return
