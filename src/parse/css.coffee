@@ -4,24 +4,32 @@ skipRE = /^(;|comment|space)$/
 
 exports.imports = (css) ->
   toks = tokenizer {css, error}
-  next = toks.nextToken
-  imps = []
-  while tok = next()
 
-    if tok[0] is 'at-word'
-      break if tok[1] isnt '@import'
-      start = tok[3]
-      tok = after 'space', next
-      if tok and tok[0] is 'string'
-        imps.push
-          ref: eval tok[1]
-          line: tok[2]
-          module: null
+  offset = 0
+  prev = null
+  curr = null
+  next = ->
+    if prev = curr
+      offset += prev[1].length
+    curr = toks.nextToken()
 
-    else if !skipRE.test tok[0]
-      break
+  deps = []
+  while next()
+    continue if skipRE.test curr[0]
+    break if curr[0] isnt 'at-word'
+    break if curr[1] isnt '@import'
+    start = offset
+    next() # skip ' '
+    ref = next()[1].slice 1, -1
+    next() # skip ';'
+    next() # skip '\n'
+    deps.push
+      ref: ref
+      module: null
+      start: start
+      end: offset + 1
 
-  return imps
+  return deps
 
 #
 # Helpers

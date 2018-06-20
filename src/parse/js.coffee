@@ -5,18 +5,18 @@
 exports.imports = (input) ->
   toks = tokenizer input
   next = toks.getToken.bind toks
-  imps = []
+  deps = []
   while tok = next()
     break if tok.type is tokTypes.eof
 
     if isRequire(tok) and (tok = getRequireArg next)
-      imps.push
+      deps.push
         ref: tok.value
         module: null
         start: tok.start
         end: tok.end
 
-  return imps
+  return deps
 
 isRequire = (tok) ->
   (tok.type is tokTypes.name) and (tok.value is 'require')
