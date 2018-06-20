@@ -21,6 +21,9 @@ self.plugins = [
 
 self.mixin =
 
+  _wrapSourceMapURL: (url) ->
+    '//# sourceMappingURL=' + url
+
   _joinModules: ->
     result = new MagicString.Bundle
 

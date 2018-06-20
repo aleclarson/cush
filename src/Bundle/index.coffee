@@ -38,6 +38,12 @@ class Bundle
     throw Error 'Expected a module' if !mod or !mod.pack
     path.join(mod.pack.root, mod.file.name).slice @main.pack.root.length + 1
 
+  getSourceMapURL: (value) ->
+    '\n\n' + @_wrapSourceMapURL \
+      typeof value is 'string' and
+      value + '.map' or
+      value.toUrl()
+
   _configure: ->
     config = new BundleConfig @dev, @target
     @_hooks = config._load @main.pack, @_form
@@ -116,6 +122,9 @@ class Bundle
 
   _joinModules: (modules) ->
     throw Error 'Bundle format must override `_joinModules`'
+
+  _wrapSourceMapURL: (url) ->
+    throw Error 'Bundle format must override `_wrapSourceMapURL`'
 
 module.exports = Bundle
 
