@@ -1,56 +1,47 @@
-{merge} = require 'cara/utils'
-postcss = require 'postcss'
-cara = require 'cara'
+{evalFile, mapSources} = require 'cush/utils'
+cush = require 'cush'
+path = require 'path'
 
-# postcss without plugins
-noop = postcss()
+postcss = null
+packs = new WeakMap
 
-# file types we should parse
-exts = new Set ['.css']
+module.exports = ->
+  @hookPackages loadConfig
+  @hookModules '.css', (mod) =>
+    if config = packs.get mod.pack
+      config = Object.create config
+      filename = path.join mod.pack.root, mod.file.name
+      config.from = path.relative @root, filename
+      config.syntax = mod.syntax
+      postcss(config.plugins)
+        .process mod.content, config
+        .then (res) ->
 
-# plugins used by every package
-globalConfig =
-  plugins: []
-  map:
-    inline: false
-    annotation: false
-    sourcesContent: false
+          res.warnings().forEach (msg) ->
+            cush.emit 'warning',
+              message: msg.toString()
+              file: filename
 
-parseFile = ->
-  @pack.postcss.parse @data, @pack.config.postcss
+          res.map = res.map.toJSON()
+          mapSources [res, mod],
+            includeContent: false
 
-# TODO: merge in global plugins
-cara.plugin 'postcss', ->
+#
+# Internal
+#
 
-  loadConfig = (pack) ->
-    if config = pack.eval 'postcss.config.js'
-      merge config, globalConfig
-      pack.postcss = postcss config.plugins
-      pack.config.postcss = config
-      return
+sourceMaps =
+  inline: false
+  annotation: false
+  sourcesContent: false
 
-  @on 'package:add', (pack) ->
-    loadConfig pack
-
-    if pack.mutable
-      pack.watch 'postcss.config.js', ->
-        loadConfig pack
-
-  @on 'file:add', (file) ->
-    if exts.has file.ext
-      file.parse = parseFile
-      return
-
-  #
-  # Plugin properties
-  #
-
-  exts: exts
-
-  set: (key, val) ->
-    globalConfig[key] = val
-    return
-
-  use: (plug) ->
-    globalConfig.plugins.push plug
-    return
+# TODO: watch `postcss.config.js` for changes
+loadConfig = (pack) ->
+  if config = packs.get pack
+    return config
+  if config = evalFile 'postcss.config.js'
+    postcss or= require 'postcss'
+    config.to = ''
+    config.map = sourceMaps
+    packs.set pack, config
+    return config

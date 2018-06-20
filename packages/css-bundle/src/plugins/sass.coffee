@@ -1,26 +1,32 @@
-{lazyRequire} = require 'cush/utils'
 
+# lazy-loaded modules
 sass = null
 syntax = null
 
-module.exports = (bundle) ->
-  sass ?= await lazyRequire 'node-sass'
-  syntax ?= await lazyRequire 'postcss-scss'
+# supported file extensions
+exts = ['.scss', '.sass']
 
-  bundle.postcss.syntax = syntax
-  bundle.hook 'bundle', transform
-  return
+module.exports = ->
+  @hook 'bundle', renderBundle
+  @hookModules exts, (mod) =>
+    sass or= require 'node-sass'
+    syntax or= require 'postcss-scss'
 
-transform = (opts, done) ->
-  sass.render {
-    data: opts.data
-    file: opts.file
-    outFile: opts.file
+    mod.ext = '.css'
+    mod.syntax = syntax
+    return
+
+matchExts = (file) ->
+  exts.indexOf(file.ext) >= 0
+
+renderBundle = (input, bundle) ->
+  return if !bundle.files.some matchExts
+  res = sass.renderSync
+    data: input
+    file: ''
+    outFile: 'bundle.css'
     sourceMap: true
     omitSourceMapUrl: true
-  }, (err, res) ->
-    if err
-    then done err
-    else done null,
-      data: res.css.toString()
-      map: res.map.toString()
+  res.content = res.css.toString()
+  res.map = JSON.parse res.map.toString()
+  res
