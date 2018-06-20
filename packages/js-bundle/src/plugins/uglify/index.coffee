@@ -8,6 +8,7 @@ module.exports = ->
     sourceMap: {json: false}
     toplevel: true
     keep_fnames: @dev
+    mangle: !@dev
     compress:
       sequences: !@dev
       dead_code: !@dev
