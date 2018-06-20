@@ -58,6 +58,9 @@ excludeLocals = (dep) ->
   return
 
 watchPackage = (pack, root) ->
+  pack.watched = true
+
+  # ignored files
   skip = concat pack.exclude, cush.config('exclude')
 
   stream = wch.stream root,
