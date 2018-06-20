@@ -8,18 +8,21 @@ module.exports = ->
   buble = require '@cush/buble'
   buble.parse = require('acorn').parse
 
+  {root} = this
   @hookModules '.js', (mod) ->
+    filename = path.join mod.pack.root, mod.file.name
 
     try res = buble.transform mod.content,
       includeContent: false
       objectAssign: 'Object.assign'
       transforms: tforms
+      source: path.relative root, filename
 
     catch err
       cush.emit 'warning',
         message: 'buble threw an error: ' +
           (cush.verbose and err.stack or err.message)
-        file: path.join mod.pack.root, mod.file.name
+        file: filename
       return
 
     if res.map
