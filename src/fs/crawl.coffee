@@ -7,7 +7,10 @@ fs = require 'fs'
 # Crawls the given `root` directory, and modifies the given `files` object.
 crawl = (root, files, opts = {}) ->
   only = matchGlobs opts.only
-  skip = matchGlobs opts.skip
+  skip =
+    if opts.skip
+    then matchGlobs(opts.skip)
+    else noop.false
 
   i = -1
   dirs = [root]
