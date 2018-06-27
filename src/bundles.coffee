@@ -41,6 +41,11 @@ cush.bundle = (main, opts) ->
   bundle.main = bundle._getModule pack.file(main), pack
   loadFormat bundle
 
+  # Load the project.
+  project = cush.project pack.root
+  project.bundles.add bundle
+  bundle._project = project
+
   cush.bundles[id] = bundle
   return bundle._configure()
 

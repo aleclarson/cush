@@ -27,11 +27,9 @@ class Bundle
 
   destroy: ->
     @_rev = 0  # cancel the current build
-
-    # prevent future builds
-    @read = noop.val Promise.resolve()
-
-    @packages.forEach @_dropPackage.bind this
+    @read = noop.val Promise.resolve()  # prevent future builds
+    @packages.forEach @_dropPackage.bind this  # remove unused packages
+    @_project.drop this  # remove unused projects
     return this
 
   relative: (mod) ->

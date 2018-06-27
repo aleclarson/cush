@@ -5,6 +5,7 @@ module.exports = cush;
 
 require('./lib/fs');
 require('./lib/bundles');
+require('./lib/projects');
 require('./lib/registry');
 
 // Bundle formats
