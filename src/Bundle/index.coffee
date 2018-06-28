@@ -38,6 +38,19 @@ class Bundle
     throw Error 'Expected a module' if !mod or !mod.pack
     mod.pack.resolve(mod.file).slice @root.path.length + 1
 
+  has: (path) ->
+    if typeof path is 'string'
+      path = path.split '.'
+
+    obj = @_config
+    last = path.length - 1
+    for i in [0 ... last]
+      obj = obj[path[i]]
+      if !obj or typeof obj isnt 'object'
+        return false
+
+    return obj[path[last]] isnt undefined
+
   get: (path) ->
     if typeof path is 'string'
       path = path.split '.'
