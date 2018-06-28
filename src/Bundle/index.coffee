@@ -98,6 +98,22 @@ class Bundle
       return this
     return event
 
+  hookLeft: (id, hook) ->
+    if typeof hook isnt 'function'
+      throw TypeError '`hook` must be a function'
+    if !event = @_events[id]
+      @_events[id] = event = new BundleEvent
+    event.add hook, -1
+    return this
+
+  hookRight: (id, hook) ->
+    if typeof hook isnt 'function'
+      throw TypeError '`hook` must be a function'
+    if !event = @_events[id]
+      @_events[id] = event = new BundleEvent
+    event.add hook, 1
+    return this
+
   hookModules: (exts, hook) ->
     if Array.isArray exts
       exts.forEach (ext) => @hook 'module' + ext, hook
