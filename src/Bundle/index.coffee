@@ -1,4 +1,4 @@
-BundleConfig = require './Config'
+BundleEvent = require './Event'
 build = require './build'
 noop = require 'noop'
 path = require 'path'
@@ -19,8 +19,9 @@ class Bundle
     @packages = []    # ordered packages
     @modules = []     # sparse module map
     @missed = []      # missing dependencies
-    @_form = null     # bundle format
-    @_hooks = null    # bundle hooks
+    @_config = null   # plugin config
+    @_events = null   # event hooks
+    @_format = null   # bundle format
     @_result = null   # build promise
 
   read: ->
@@ -37,15 +38,80 @@ class Bundle
     throw Error 'Expected a module' if !mod or !mod.pack
     mod.pack.resolve(mod.file).slice @root.path.length + 1
 
+  get: (path) ->
+    if typeof path is 'string'
+      path = path.split '.'
+
+    obj = @_config
+    last = path.length - 1
+    for i in [0 ... last]
+      obj = obj[path[i]]
+      return if !obj?
+      if obj.constructor isnt Object
+        path = path.slice(0, i + 1).join '.'
+        throw TypeError "'#{path}' is not an object"
+
+    return obj[path[last]]
+
+  set: (path, val) ->
+    if typeof path is 'string'
+      path = path.split '.'
+
+    obj = @_config
+    last = path.length - 1
+    for i in [0 ... last]
+      prev = obj
+      obj = prev[path[i]]
+      if !obj?
+        prev[path[i]] = obj = {}
+      else if obj.constructor isnt Object
+        path = path.slice(0, i + 1).join '.'
+        throw TypeError "'#{path}' is not an object"
+
+    obj[path[last]] = val
+    return this
+
   getSourceMapURL: (value) ->
     '\n\n' + @_wrapSourceMapURL \
       typeof value is 'string' and
       value + '.map' or
       value.toUrl()
 
+  hook: (id, hook) ->
+    if !event = @_events[id]
+      @_events[id] = event = new BundleEvent
+    if typeof hook is 'function'
+      event.add hook
+      return this
+    return event
+
+  hookModules: (exts, hook) ->
+    if Array.isArray exts
+      exts.forEach (ext) => @hook 'module' + ext, hook
+    else @hook 'module' + exts, hook
+
   _configure: ->
-    config = new BundleConfig @dev, @target
-    @_hooks = config._load @main.pack, @_form
+    @_config = {}
+    try
+      @_events = events = {}
+      @_format.plugins?.forEach (plugin) =>
+        plugin.call this
+
+      if config = @_project.config[@_format.name]
+        config.call this
+
+      if events.config
+        events.config.emit()
+        events.config = null
+
+    catch err
+      cush.emit 'error',
+        message: 'Failed to configure bundle'
+        error: err
+        root: @root.path
+      return this
+
+    @_invalidate() if @valid
     return this
 
   _build: -> try
@@ -58,8 +124,7 @@ class Bundle
 
       # Force rebuild when dependencies are missing.
       if @missed.length
-        @valid = false  # Disable automatic rebuilds (temporarily).
-        @_result = null
+        @_invalidate()
 
     # Return the payload.
     return bundle
@@ -67,17 +132,24 @@ class Bundle
   catch err
     # Errors are ignored when the next build is automatic.
     if @valid
-      @valid = false  # Disable automatic rebuilds (temporarily).
-      @_result = null
+      @_invalidate()
       throw err
 
+  # Invalidate the current build, and disable automatic rebuilds
+  # until the next build is triggered manually.
   _invalidate: ->
+    @valid = false
+    @_result = null
+    return
+
+  # Invalidate the current build, and trigger an automatic rebuild.
+  _rebuild: ->
     if @valid
       @valid = false
       @_result = @_result
         .then noEarlier 200 + Date.now()
         .then @_build.bind this
-    return this
+      return
 
   # Return a Module object for the given file object.
   _getModule: (file, pack) ->
@@ -96,9 +168,10 @@ class Bundle
 
   # Run hooks for a module.
   _loadModule: (mod) ->
-    if hooks = @_hooks._module[mod.ext]
-      i = -1; ext = mod.ext
-      while ++i < hooks.length
+    {ext} = mod
+    if event = @_events['module' + ext]
+      {hooks} = event
+      for i in [0 ... hooks.length]
         await hooks[i] mod
         if mod.ext isnt ext
           return @_loadModule mod
@@ -106,12 +179,11 @@ class Bundle
   _unloadModule: (id) ->
     if mod = @modules[id]
       mod.content = null
-      @_invalidate()
-    return this
+      @_rebuild()
 
   # Run hooks for a package.
   _loadPackage: (pack) ->
-    Promise.all @_hooks._package.map (hook) -> hook pack
+    Promise.all @_events.package.hooks.map (hook) -> hook pack
 
   _dropPackage: (pack) ->
     pack.bundles.delete this

@@ -68,7 +68,7 @@ loadFormat = (bundle) ->
     throw Error 'Bundle format has no "name" property'
 
   bundle.exts = form.exts and form.exts[..] or []
-  bundle._form = form
+  bundle._format = form
 
   if form.mixin
     for key, value of form.mixin

@@ -6,7 +6,7 @@ postcss = null
 packs = new WeakMap
 
 module.exports = ->
-  @hookPackages loadConfig
+  @hook 'package', loadConfig
   @hookModules '.css', (mod) =>
     if config = packs.get mod.pack
       config = Object.create config

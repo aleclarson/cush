@@ -17,7 +17,7 @@ module.exports = ->
 
   doneHook = @hook 'nebu'
 
-  @hookPackages (pack) ->
+  @hook 'package', (pack) ->
     if config = await loadConfig pack.path
       {plugins} = config
       Object.assign config, shared
