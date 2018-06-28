@@ -1,4 +1,4 @@
-{relative} = require '../utils'
+relative = require '@cush/relative'
 recrawl = require 'recrawl'
 path = require 'path'
 fs = require 'fs'

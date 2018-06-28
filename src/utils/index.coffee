@@ -8,7 +8,6 @@ u.evalFile = require './evalFile'
 u.findPackage = require './findPackage'
 u.lazyRequire = require './lazyRequire'
 u.mapSources = require './mapSources'
-u.relative = require './relative'
 u.sha256 = require './sha256'
 u.uhoh = require './uhoh'
 

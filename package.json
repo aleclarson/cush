@@ -14,6 +14,7 @@
   "dependencies": {
     "@cush/css-bundle": "^0.1.0",
     "@cush/js-bundle": "^0.1.0",
+    "@cush/relative": "^0.0.1",
     "@cush/sorcery": "^1.1.0",
     "acorn": "^5.5.3",
     "cush": "file:.",

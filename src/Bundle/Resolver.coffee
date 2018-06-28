@@ -1,4 +1,4 @@
-{relative} = require '../utils'
+relative = require '@cush/relative'
 path = require 'path'
 
 scopedRE = /^((?:@[a-z._-]+\/)?[a-z._-]+)(?:\/(.+))?$/
