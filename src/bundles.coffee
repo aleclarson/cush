@@ -1,5 +1,4 @@
 {findPackage, sha256} = require './utils'
-assert = require 'invariant'
 cush = require 'cush'
 path = require 'path'
 fs = require 'saxon/sync'
@@ -11,8 +10,10 @@ cush.bundles = Object.create null
 
 # Bundle constructor
 cush.bundle = (main, opts) ->
-  assert opts and opts.target, '`target` option must be defined'
-  assert ext = path.extname(main), '`main` path must have an extension'
+  if !opts or !opts.target
+    throw Error '`target` option must be defined'
+  if !ext = path.extname main
+    throw Error '`main` path must have an extension'
 
   if !path.isAbsolute main
     main = path.resolve main
@@ -22,14 +23,15 @@ cush.bundle = (main, opts) ->
   if bundle = cush.bundles[id]
     return bundle
 
-  # Get the main package.
-  if root = findPackage main
-    pack = cush.package root
-  else throw Error '`main` path must be inside a package'
+  # Find the root package.
+  if !root = findPackage main
+    throw Error '`main` path must be inside a package'
+  pack = cush.package root
 
   # Find the main module.
-  file = main.slice(0, -ext.length) + '.' + opts.target + ext
-  fs.isFile(file) or assert fs.isFile(file = main), '`main` path must be a file'
+  if !fs.isFile file = main.slice(0, -ext.length) + '.' + opts.target + ext
+    if !fs.isFile file = main
+      throw Error '`main` path must be a file'
 
   # Create the main module.
   main = path.relative root, file
