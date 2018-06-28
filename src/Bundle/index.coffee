@@ -210,6 +210,11 @@ class Bundle
       mod.content = null
       @_rebuild()
 
+  _unloadModules: ->
+    @_invalidate()
+    @modules.forEach (mod) ->
+      mod.content = null
+
   # Run hooks for a package.
   _loadPackage: (pack) ->
     Promise.all @_events.package.hooks.map (hook) -> hook pack
