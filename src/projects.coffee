@@ -21,6 +21,7 @@ class Project
       .on 'data', (evt) =>
         @config = evalFile(configPath) or {}
         @bundles.forEach (bundle) ->
+          bundle._unloadModules()
           bundle._configure()
 
   drop: (bundle) ->
