@@ -1,3 +1,4 @@
+{mapSources} = require '../../utils'
 sucrase = require('@cush/sucrase').transform
 cush = require 'cush'
 path = require 'path'
@@ -21,11 +22,11 @@ transform = (file, pack) ->
     tforms.push 'flow'
 
   filename = pack.resolve file
-  try file.content =
-    sucrase file.content,
-      filePath: filename
-      transforms: tforms
-      enableLegacyBabel5ModuleInterop: true
+  try res = sucrase file.content,
+    filePath: filename
+    transforms: tforms
+    sourceMapOptions: {}
+    enableLegacyBabel5ModuleInterop: true
 
   catch err
     cush.emit 'warning',
@@ -33,6 +34,8 @@ transform = (file, pack) ->
         (cush.verbose and err.stack or err.message)
       file: filename
     return
+
+  mapSources file, res
 
   file.ext = '.js'
   file._sucrase = file.time

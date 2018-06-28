@@ -10,7 +10,7 @@ module.exports = ->
   @hookModules '.css', (mod) =>
     if config = packs.get mod.pack
       config = Object.create config
-      filename = path.join mod.pack.root, mod.file.name
+      filename = mod.pack.resolve mod.file
       config.from = path.relative @root, filename
       config.syntax = mod.syntax
       postcss(config.plugins)

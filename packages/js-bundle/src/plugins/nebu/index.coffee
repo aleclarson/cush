@@ -34,10 +34,6 @@ module.exports = ->
       config.state = {}
       config.filename = mod.pack.resolve mod.file
       res = nebu.process mod.content, config
-      doneHook.run mod, config.state
-      if res.map
-        res.content = res.js
-        mapSources mod, res
 
     catch err
       cush.emit 'warning',
@@ -45,6 +41,12 @@ module.exports = ->
           (cush.verbose and err.stack or err.message)
         file: config.filename
       return
+
+    doneHook.emit mod, config.state
+    if res.map
+      res.content = res.js
+      mapSources mod, res
+    return
 
 # TODO: watch `nebu.config.js` for changes
 loadConfig = (root) ->
