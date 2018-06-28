@@ -7,9 +7,7 @@ path = require 'path'
 nextFileId = 1
 
 class Package
-  constructor: (root, data) ->
-    @root = root
-    @data = data
+  constructor: (@path, @data) ->
     @files = Object.create null
     @users = new Set
     @parent = null
@@ -20,7 +18,7 @@ class Package
   crawl: ->
     if not @crawled
       @crawled = true
-      crawl @root, @files,
+      crawl @path, @files,
         skip: concat @exclude, cush.config('exclude')
 
   file: (name) ->
@@ -42,6 +40,12 @@ class Package
 
     return file
 
+  resolve: (file) ->
+    path.resolve @path,
+      if typeof file is 'string'
+      then file
+      else file.name
+
   search: (name, target, exts) ->
 
     if ext = path.extname name
@@ -58,7 +62,7 @@ class Package
     name = path.join 'node_modules', name
     if pack = @files[name]
       return pack
-    if pack = tryPackage path.join @root, name
+    if pack = tryPackage path.join @path, name
       pack.parent or= this
       pack.users.add this
       @files[name] = pack

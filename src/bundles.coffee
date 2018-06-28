@@ -38,11 +38,12 @@ cush.bundle = (main, opts) ->
   # Create the bundle.
   bundle = new Bundle opts.dev, opts.target
   bundle.id = id
+  bundle.root = pack
   bundle.main = bundle._getModule pack.file(main), pack
   loadFormat bundle
 
   # Load the project.
-  project = cush.project pack.root
+  project = cush.project pack.path
   project.bundles.add bundle
   bundle._project = project
 

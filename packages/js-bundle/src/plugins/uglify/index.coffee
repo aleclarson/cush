@@ -36,7 +36,7 @@ setup = (options) ->
 
   {root} = this
   @hookModules '.js', (mod) ->
-    filename = path.join mod.pack.root, mod.file.name
+    filename = path.join mod.pack.path, mod.file.name
 
     res = uglify mod.content, options
     if !res.error

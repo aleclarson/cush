@@ -18,7 +18,7 @@ module.exports = ->
   doneHook = @hook 'nebu'
 
   @hookPackages (pack) ->
-    if config = await loadConfig pack.root
+    if config = await loadConfig pack.path
       {plugins} = config
       Object.assign config, shared
       if Array.isArray plugins
@@ -32,7 +32,7 @@ module.exports = ->
     try
       config = Object.create config
       config.state = {}
-      config.filename = path.join mod.pack.root, mod.file.name
+      config.filename = mod.pack.resolve mod.file
       res = nebu.process mod.content, config
       doneHook.run mod, config.state
       if res.map

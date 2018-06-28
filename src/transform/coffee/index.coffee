@@ -21,7 +21,7 @@ brew = (pack) ->
   coffee
 
 transform = (file, pack) ->
-  filename = path.join pack.root, file.name
+  filename = pack.resolve file
 
   if !pack.coffee or= await brew pack
     cush.emit 'warning',

@@ -5,7 +5,7 @@ fs = require 'saxon'
 loadFile = (file, pack) ->
 
   # Read the file.
-  file.content ?= await fs.read path.join(pack.root, file.name)
+  file.content ?= await fs.read pack.resolve(file)
 
   # Transform the file.
   try while true
@@ -18,7 +18,7 @@ loadFile = (file, pack) ->
     cush.emit 'error',
       message: 'Failed to transform a file'
       error: err
-      file: path.join(pack.root, file.name)
+      file: pack.resolve file
 
   return file
 

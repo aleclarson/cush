@@ -141,7 +141,7 @@ unloadFile = (file) ->
 readPackage = (pack) ->
   {name, version} = pack.data
   try
-    data = evalFile path.join(pack.root, 'package.json')
+    data = evalFile path.join(pack.path, 'package.json')
     if (name is data.name) and (version is data.version)
       pack.data = data
       return true

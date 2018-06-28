@@ -9,6 +9,7 @@ class Bundle
     @id = null        # bundle identifier
     @dev = dev        # development mode
     @target = target  # targeted platform
+    @root = null      # the root package
     @main = null      # the main module
     @exts = null      # implicit file extensions
     @time = 0         # time of last build
@@ -34,7 +35,7 @@ class Bundle
 
   relative: (mod) ->
     throw Error 'Expected a module' if !mod or !mod.pack
-    path.join(mod.pack.root, mod.file.name).slice @main.pack.root.length + 1
+    mod.pack.resolve(mod.file).slice @root.path.length + 1
 
   getSourceMapURL: (value) ->
     '\n\n' + @_wrapSourceMapURL \

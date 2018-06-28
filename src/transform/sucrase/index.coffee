@@ -20,7 +20,7 @@ transform = (file, pack) ->
   else if isFlow pack
     tforms.push 'flow'
 
-  filename = path.join pack.root, file.name
+  filename = pack.resolve file
   try file.content =
     sucrase file.content,
       filePath: filename

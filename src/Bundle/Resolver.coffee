@@ -21,8 +21,8 @@ Resolver = (bundle, resolved) ->
       # use the main module if referencing package root
       if !id and !id = resolveMain pack
         cush.emit 'warning',
-          message: '"main" path is invalid: ' + pack.root
-          package: pack.root
+          message: '"main" path is invalid: ' + pack.path
+          package: pack.path
         return false
 
     # node_modules
@@ -39,8 +39,8 @@ Resolver = (bundle, resolved) ->
         # use the main module if nothing follows the package name
         if !id = match[2] or resolveMain pack
           cush.emit 'warning',
-            message: '"main" path is invalid: ' + pack.root
-            package: pack.root
+            message: '"main" path is invalid: ' + pack.path
+            package: pack.path
           return false
 
     else # absolute paths are forbidden 💥
