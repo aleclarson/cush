@@ -4,7 +4,8 @@ path = require 'path'
 wch = require 'wch'
 fs = require 'fs'
 
-projects = Object.create null
+cush.projects =
+  projects = Object.create null
 
 cush.project = (root) ->
   projects[root] or= new Project root
