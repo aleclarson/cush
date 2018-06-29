@@ -13,7 +13,7 @@ cush.project = (root) ->
 class Project
   constructor: (root) ->
     configPath = path.join root, 'cush.config.js'
-    @root = root
+    @root = cush.package root
     @config = evalFile(configPath) or {}
     @bundles = new Set
     @watcher =
@@ -29,4 +29,4 @@ class Project
     @bundles.delete bundle
     if @bundles.size is 0
       @watcher.destroy()
-      delete projects[@root]
+      delete projects[@root.path]
