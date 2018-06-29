@@ -26,6 +26,12 @@ class Project
           bundle._configure()
 
   drop: (bundle) ->
+
+    if !arguments.length
+      @bundles.forEach (bundle) ->
+        bundle.destroy()
+      return true
+
     @bundles.delete bundle
     if @bundles.size is 0
       @watcher.destroy()
