@@ -2,7 +2,7 @@ tarInstall = require 'tar-install'
 tarUrl = require 'tar-url'
 semver = require 'semver'
 path = require 'path'
-cush = require 'cush'
+cush = require '../index'
 uhoh = require './uhoh'
 fs = require 'saxon/sync'
 

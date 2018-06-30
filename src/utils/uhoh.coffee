@@ -1,4 +1,4 @@
-cush = require 'cush'
+cush = require '../index'
 
 uhoh = (err) ->
   if err.constructor is Object
