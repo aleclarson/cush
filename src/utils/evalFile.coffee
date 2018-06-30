@@ -9,6 +9,8 @@ evalFile = (file) ->
 
 loaders =
 
+  '': fs.read
+
   '.js': (file) ->
     delete Module._cache[file]
     Module._load file
