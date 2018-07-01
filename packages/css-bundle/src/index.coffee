@@ -11,7 +11,7 @@ self.name = 'css'
 self.exts = ['.css', '.scss', '.sass']
 
 self.plugins = [
-  require './plugins/sass'
+  require './plugins/scss'
   require './plugins/postcss'
 ]
 
