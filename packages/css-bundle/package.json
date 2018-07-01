@@ -1,6 +1,6 @@
 {
   "name": "@cush/css-bundle",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "main": "lib/index",
   "license": "MIT",
   "description": "Bundle format for cascading styles",

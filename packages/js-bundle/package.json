@@ -1,6 +1,6 @@
 {
   "name": "@cush/js-bundle",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "main": "lib/index",
   "license": "MIT",
   "description": "JavaScript bundle format",
