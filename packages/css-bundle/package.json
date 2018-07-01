@@ -1,15 +1,19 @@
 {
-  "name": "css-bundle",
-  "version": "0.0.0",
-  "main": "js/index",
+  "name": "@cush/css-bundle",
+  "version": "0.0.1",
+  "main": "lib/index",
+  "license": "MIT",
+  "description": "Bundle format for cascading styles",
+  "repository": "https://github.com/aleclarson/cush/tree/master/packages/css-bundle",
   "scripts": {
-    "build": "coffee-build src -o js",
+    "build": "coffee-build src -o lib",
     "prepublishOnly": "prepv -i || true"
   },
   "dependencies": {
     "cush": "file:../.."
   },
   "devDependencies": {
-    "wch-coffee": "^0.2.0"
+    "coffeescript": "^2.3.0",
+    "wch-coffee": "*"
   }
 }
