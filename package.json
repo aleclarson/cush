@@ -23,7 +23,7 @@
     "@cush/relative": "^0.0.1",
     "@cush/sorcery": "^1.1.0",
     "@cush/sucrase": "^3.3.0",
-    "acorn": "^5.5.3",
+    "acorn": "^5.7.1",
     "cush": "file:.",
     "is-object": "^1.0.1",
     "recrawl": "^0.0.2",
