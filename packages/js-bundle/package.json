@@ -19,6 +19,7 @@
     "@cush/sorcery": "^1.4.5",
     "@cush/uglify-js": "^3.4.2",
     "acorn": "^5.7.1",
+    "is-object": "^1.0.1",
     "saxon": "^0.1.1"
   },
   "devDependencies": {
