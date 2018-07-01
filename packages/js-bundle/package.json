@@ -13,7 +13,7 @@
     "cush": "^0.1.0"
   },
   "dependencies": {
-    "@cush/buble": "^0.20.0",
+    "@cush/buble": "^0.19.3",
     "@cush/magic-string": "^0.25.0",
     "@cush/nebu": "^1.2.0",
     "@cush/sorcery": "^1.4.5",
