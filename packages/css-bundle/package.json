@@ -15,5 +15,13 @@
   "devDependencies": {
     "coffeescript": "^2.3.0",
     "wch-coffee": "*"
+  },
+  "dependencies": {
+    "@cush/magic-string": "^0.25.0",
+    "@cush/sorcery": "^1.4.5",
+    "is-object": "^1.0.1",
+    "node-sass": "^4.5.3",
+    "postcss": "^6.0.22",
+    "postcss-scss": "^1.0.5"
   }
 }
