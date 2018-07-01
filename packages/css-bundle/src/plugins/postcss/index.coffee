@@ -22,6 +22,7 @@ module.exports = ->
               message: msg.toString()
               file: filename
 
+          res.content = res.css.toString()
           res.map = res.map.toJSON()
           mapSources [res, mod],
             includeContent: false
