@@ -52,7 +52,7 @@ self.mixin =
         includeContent: false
     ]
 
-    try @_hooks.bundle.each (hook) =>
+    try for hook in @_events.bundle.hooks
       return if !res = await hook result[0].content, this
       return if typeof res.content isnt 'string'
       return result.unshift res if isObject res.map
