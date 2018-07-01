@@ -31,7 +31,8 @@
     "saxon": "^0.1.1",
     "semver": "^5.5.0",
     "tar-install": "^0.0.2",
-    "tar-url": "^0.0.2"
+    "tar-url": "^0.0.2",
+    "wch": "^0.8.0"
   },
   "devDependencies": {
     "coffeescript": "^2.3.0",
