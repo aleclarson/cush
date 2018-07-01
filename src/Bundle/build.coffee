@@ -1,6 +1,5 @@
 Resolver = require './Resolver'
 loadFile = require '../fs/loadFile'
-noop = require 'noop'
 cush = require 'cush'
 
 build = (bundle, opts) ->

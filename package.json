@@ -27,6 +27,7 @@
     "acorn": "^5.7.1",
     "cush": "file:.",
     "is-object": "^1.0.1",
+    "noop": "aleclarson/noop#0.0.1",
     "recrawl": "^0.0.2",
     "saxon": "^0.1.1",
     "semver": "^5.5.0",
