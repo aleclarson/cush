@@ -1,9 +1,10 @@
 {
   "name": "cush",
   "version": "0.1.0",
+  "main": "lib/index.js",
+  "license": "MIT",
   "description": "Modern module bundler",
   "repository": "https://github.com/aleclarson/cush.git",
-  "license": "MIT",
   "scripts": {
     "build": "coffee-build src -o lib",
     "prepublishOnly": "prepv -i || true"
