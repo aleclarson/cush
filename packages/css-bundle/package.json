@@ -9,8 +9,8 @@
     "build": "coffee-build src -o lib",
     "prepublishOnly": "prepv -i || true"
   },
-  "dependencies": {
-    "cush": "file:../.."
+  "peerDependencies": {
+    "cush": "^0.1.0"
   },
   "devDependencies": {
     "coffeescript": "^2.3.0",

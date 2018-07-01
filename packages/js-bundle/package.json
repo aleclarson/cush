@@ -9,6 +9,9 @@
     "build": "coffee-build src -o lib",
     "prepublishOnly": "prepv -i || true"
   },
+  "peerDependencies": {
+    "cush": "^0.1.0"
+  },
   "dependencies": {
     "@cush/buble": "^0.20.0",
     "@cush/magic-string": "^0.25.0",
@@ -16,7 +19,6 @@
     "@cush/sorcery": "^1.3.0",
     "@cush/uglify-js": "^3.4.0",
     "acorn": "^5.5.3",
-    "cush": "file:../..",
     "saxon": "^0.1.1"
   },
   "devDependencies": {
