@@ -1,6 +1,9 @@
+const fs = require('fs');
+try {
+  fs.symlinkSync('..', 'node_modules/cush');
+} catch(e) {}
 
 const cush = require('./lib/index');
-require.cache[module.filename] = module;
 module.exports = cush;
 
 require('./lib/fs');
