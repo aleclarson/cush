@@ -1,4 +1,4 @@
-# cush v0.1.0
+# cush v0.1.1
 
 🚧 *Under construction*
 
