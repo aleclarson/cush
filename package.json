@@ -11,6 +11,11 @@
   "engines": {
     "node": ">=6"
   },
+  "files": [
+    "lib/",
+    "packages/",
+    "utils.js"
+  ],
   "dependencies": {
     "@cush/css-bundle": "^0.1.0",
     "@cush/js-bundle": "^0.1.0",
