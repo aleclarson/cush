@@ -53,7 +53,7 @@ self.mixin =
     ]
 
     try @_hooks.bundle.each (hook) =>
-      return if !res = hook result[0].content, this
+      return if !res = await hook result[0].content, this
       return if typeof res.content isnt 'string'
       return result.unshift res if isObject res.map
       throw Error '"bundle" hook should return falsy or {content, map} object'
