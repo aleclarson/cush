@@ -9,9 +9,8 @@
 
     var loader = loaders[id];
     if (loader) {
-      var exports = {};
-      loader(module = {exports}, exports);
-      loaded[id] = module;
+      loaded[id] = module = {exports};
+      loader(module, module.exports);
       return module.exports;
     }
 
