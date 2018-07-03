@@ -9,7 +9,7 @@
 
     var loader = loaders[id];
     if (loader) {
-      loaded[id] = module = {exports};
+      loaded[id] = module = {exports: {}};
       loader(module, module.exports);
       return module.exports;
     }
