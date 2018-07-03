@@ -5,7 +5,12 @@ fs = require 'fs'
 
 crawl = (root, files, opts) ->
   recrawl(opts) root, (file) ->
-    files[file] = follow(file) or true
+
+    if target = follow path.join(root, file)
+      target = path.relative root, target
+      return if target[0] is '.'
+
+    files[file] = target or true
     return
 
 module.exports = crawl
