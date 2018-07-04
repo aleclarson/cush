@@ -39,7 +39,7 @@ sourceMaps =
 loadConfig = (pack) ->
   if config = packs.get pack
     return config
-  if config = evalFile 'postcss.config.js'
+  if config = evalFile path.join(pack.path, 'postcss.config.js')
     postcss or= require 'postcss'
     config.to = ''
     config.map = sourceMaps
