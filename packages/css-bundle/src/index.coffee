@@ -63,7 +63,7 @@ self.mixin =
         trace = sorcery.portal result,
           readFile: (filename) -> modules[filename].content
         traced = trace err.line, err.column - 1
-        err.file = path.join @main.pack.path, traced.source
+        err.file = path.join @root.path, traced.source
         err.line = traced.line
         err.column = traced.column
       throw err
