@@ -10,7 +10,9 @@ module.exports = ->
   @hook 'bundle', renderBundle
   @hookModules exts, (mod) =>
     sass or= require 'node-sass'
-    syntax or= require 'postcss-scss'
+    if !syntax
+      syntax = require 'postcss-scss'
+      syntax.tokenize = require 'postcss-scss/lib/scss-tokenize'
 
     mod.ext = '.css'
     mod.syntax = syntax

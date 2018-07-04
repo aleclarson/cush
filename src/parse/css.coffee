@@ -1,9 +1,10 @@
-tokenizer = require 'postcss/lib/tokenize'
+cssTokenize = require 'postcss/lib/tokenize'
 
 skipRE = /^(;|comment|space)$/
 
-exports.imports = (css) ->
-  toks = tokenizer {css, error}
+exports.imports = (css, mod) ->
+  tokenize = mod.syntax?.tokenize or cssTokenize
+  toks = tokenize {css, error}
 
   offset = 0
   prev = null

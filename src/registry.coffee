@@ -11,9 +11,9 @@ cush.parsers =
   '.css': require './parse/css'
   '.js': require './parse/js'
 
-def '_parseImports', (file) ->
-  if parse = cush.parsers[file.ext]
-    parse.imports file.content
+def '_parseImports', (mod) ->
+  if parse = cush.parsers[mod.ext]
+    parse.imports mod.content, mod
   else []
 
 #
