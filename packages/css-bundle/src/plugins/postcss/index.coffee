@@ -11,7 +11,7 @@ module.exports = ->
     if config = packs.get mod.pack
       config = Object.create config
       filename = mod.pack.resolve mod.file
-      config.from = path.relative @root, filename
+      config.from = path.relative @root.path, filename
       config.syntax = mod.syntax
       postcss(config.plugins)
         .process mod.content, config
