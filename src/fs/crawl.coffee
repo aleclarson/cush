@@ -5,6 +5,7 @@ fs = require 'fs'
 
 crawl = (root, files, opts) ->
   recrawl(opts) root, (file) ->
+    return if files[file]
 
     if target = follow path.join(root, file)
       target = path.relative root, target
