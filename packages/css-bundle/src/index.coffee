@@ -53,10 +53,13 @@ self.mixin =
     ]
 
     try for hook in @_events.bundle.hooks
-      return if !res = await hook result[0].content, this
-      return if typeof res.content isnt 'string'
-      return result.unshift res if isObject res.map
-      throw Error '"bundle" hook should return falsy or {content, map} object'
+      if !hookResult = await hook result[0].content, this
+        continue
+      if typeof hookResult.content isnt 'string'
+        continue
+      if isObject hookResult.map
+        result.unshift hookResult
+      else throw Error '"bundle" hook should return falsy or {content, map} object'
 
     catch err
       if err.line? and err.column?
