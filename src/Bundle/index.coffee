@@ -175,9 +175,14 @@ class Bundle
   _rebuild: ->
     if @valid
       @valid = false
-      @_result = @_result
-        .then noEarlier 200 + Date.now()
-        .then @_build.bind this
+
+      if @_result
+        @_result = @_result
+          .then noEarlier 200 + Date.now()
+          .then @_build.bind this
+        return
+
+      @_build()
       return
 
   # Return a Module object for the given file object.
