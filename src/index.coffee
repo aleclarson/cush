@@ -1,32 +1,26 @@
-EventEmitter = require 'events'
+Emitter = require '@cush/events'
 path = require 'path'
 os = require 'os'
 
-cush = exports
-cush.config = require './config'
-cush.verbose = process.env.VERBOSE isnt ''
+cush = new Emitter
 
 # Cache directories
 cush.BASE_DIR = path.join os.homedir(), '.cush'
 cush.BUNDLE_DIR = path.join cush.BASE_DIR, 'bundles'
 cush.PACKAGE_DIR = path.join cush.BASE_DIR, 'packages'
 
-# Global events
-events = new EventEmitter
-cush.emit = events.emit.bind events
-cush.on = events.on.bind events
-cush.off = (name, listener) ->
-  if name is '*'
-    events.removeAllListeners()
-  else events.removeListener name, listener
+log = require('lodge').debug('cush')
+require('elaps').log or= log
 
 # Prevent warnings from going unseen.
-cush.on 'warning', ->
-  if events.listenerCount('warning') is 1
-    console.warn.apply console, arguments
+cush.on 'warning', (...args) ->
+  if cush.listenerCount('warning') is 1
+    log.warn ...args
   return
 
-cush.on 'error', ->
-  if events.listenerCount('error') is 1
-    console.error.apply console, arguments
+cush.on 'error', (...args) ->
+  if cush.listenerCount('error') is 1
+    log.error ...args
   return
+
+module.exports = cush

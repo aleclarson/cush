@@ -5,33 +5,37 @@
   "description": "Modern module bundler",
   "repository": "https://github.com/aleclarson/cush.git",
   "scripts": {
-    "build": "coffee-build src -o lib",
-    "prepublishOnly": "prepv -i || true"
+    "build": "coffee-build src -o lib"
   },
   "engines": {
-    "node": ">=6"
+    "node": ">=9"
   },
   "files": [
-    "lib/",
-    "utils.js"
+    "lib",
+    "utils"
   ],
   "dependencies": {
     "@cush/css-bundle": "^0.1.0",
+    "@cush/events": "^1.0.2",
     "@cush/js-bundle": "^0.1.0",
+    "@cush/known-exts": "^0.0.1",
     "@cush/relative": "^0.0.1",
     "@cush/sorcery": "^1.4.5",
-    "@cush/sucrase": "^3.3.0",
     "acorn": "^5.7.1",
+    "elaps": "^2.3.2",
     "is-object": "^1.0.1",
-    "noop": "aleclarson/noop#0.0.1",
+    "lodge": "^0.0.9",
+    "physical-cpu-count": "^2.0.0",
+    "postcss": "^6.0.22",
     "recrawl": "^0.0.2",
     "saxon": "^0.1.1",
     "semver": "^5.5.0",
     "tar-install": "^0.0.2",
     "tar-url": "^0.0.2",
-    "wch": "^0.8.0"
+    "wch": "^0.10.0"
   },
   "devDependencies": {
+    "coffeelint": "^2.1.0",
     "coffeescript": "^2.3.0",
     "temp": "^0.8.3",
     "wch-coffee": "*"

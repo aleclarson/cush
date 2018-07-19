@@ -1,3 +1,5 @@
+log = require('lodge').debug('cush')
+
 class BundleEvent
   constructor: ->
     @hooks = []
@@ -14,6 +16,9 @@ class BundleEvent
     return hook
 
   emit: (...args) ->
-    @hooks.forEach (hook) -> hook ...args
+    @hooks.forEach (hook) ->
+      try hook ...args
+      catch err
+        log.error err
 
 module.exports = BundleEvent

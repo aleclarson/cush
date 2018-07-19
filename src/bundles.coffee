@@ -1,81 +1,78 @@
-{findPackage, sha256} = require './utils'
+{findPackage, sha256, uhoh} = require './utils'
 cush = require 'cush'
 path = require 'path'
 fs = require 'saxon/sync'
 
-Bundle = require './Bundle'
+builtinParsers = [
+  require.resolve('./parsers/js')
+  require.resolve('./parsers/css')
+]
 
 # Bundle cache
 cush.bundles = Object.create null
 
 # Bundle constructor
 cush.bundle = (main, opts) ->
-  if !opts or !opts.target
-    throw Error '`target` option must be defined'
+
+  if !opts.target
+    uhoh '`target` option is undefined', 'NO_TARGET'
+
   if !ext = path.extname main
-    throw Error '`main` path must have an extension'
+    uhoh '`main` has no extension: ' + main, 'BAD_MAIN'
 
   if !path.isAbsolute main
     main = path.resolve main
 
-  id = sha256(main).slice(0, 7) + '.' + opts.target
-  id += '.dev' if opts.dev
+  if !id = opts.id
+    id = sha256(main, 10) + '.' + opts.target
+    id += '.dev' if opts.dev
+    opts.id = id
+
   if bundle = cush.bundles[id]
     return bundle
 
+  # Find the main module.
+  file = main.slice(0, -ext.length) + '.' + opts.target + ext
+  if !fs.isFile(file) and !fs.isFile(file = main)
+    uhoh '`main` does not exist: ' + main, 'BAD_MAIN'
+
   # Find the root package.
   if !root = findPackage main
-    throw Error '`main` path must be inside a package'
-  pack = cush.package root
+    uhoh '`main` has no package: ' + main, 'BAD_MAIN'
 
-  # Find the main module.
-  if !fs.isFile file = main.slice(0, -ext.length) + '.' + opts.target + ext
-    if !fs.isFile file = main
-      throw Error '`main` path must be a file'
-
-  # Create the main module.
-  main = path.relative root, file
-  pack.files[main] or= true
+  # Resolve the bundle format.
+  if !Bundle = opts.format or resolveFormat main
+    uhoh '`main` has no bundle format: ' + main, 'NO_FORMAT'
 
   # Create the bundle.
-  bundle = new Bundle opts.dev, opts.target
-  bundle.id = id
+  bundle = new Bundle opts
+  if Bundle.plugins
+    bundle.plugins.unshift ...Bundle.plugins
+  bundle.parsers.push ...builtinParsers
+
+  # Load the root package.
+  pack = bundle._loadPackage root
   bundle.root = pack
-  bundle.main = bundle._getModule pack.file(main), pack
-  loadFormat bundle
+
+  # Load the main module.
+  main = path.relative root, file
+  bundle.main = bundle._loadAsset main, pack
+  pack.assets[main] or= bundle.main
 
   # Load the project.
-  project = cush.project pack.path
+  project = cush.project root
   project.bundles.add bundle
-  bundle._project = project
+  bundle.project = project.watch()
 
   cush.bundles[id] = bundle
-  return bundle._configure()
+  return bundle
 
 #
-# Internal
+# Helpers
 #
 
-loadFormat = (bundle) ->
-  ext = bundle.main.file.ext
-  form = cush.formats.find (form) ->
-    if form.match then form.match bundle
-    else if form.exts then form.exts.includes ext
-    else false
-
-  if !form
-    throw Error 'Bundle has no matching format'
-
-  if !form.name
-    throw Error 'Bundle format has no "name" property'
-
-  bundle.exts = form.exts and form.exts[..] or []
-  bundle._format = form
-
-  if form.mixin
-    for key, value of form.mixin
-      if key[0] is '_'
-        Object.defineProperty bundle, key, {value}
-      else bundle[key] = value
-    return
-  return
+resolveFormat = (main) ->
+  ext = path.extname main
+  for id, format of cush.formats
+    if format.exts.includes ext
+      return format

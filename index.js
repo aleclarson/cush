@@ -6,13 +6,10 @@ try {
 const cush = require('./lib/index');
 module.exports = cush;
 
-require('./lib/fs');
 require('./lib/bundles');
 require('./lib/projects');
-require('./lib/registry');
 
-// Bundle formats
-cush.formats = [
-  require('js-bundle'),
-  require('css-bundle'),
-];
+cush.formats = {
+  js: require('js-bundle'),
+  css: require('css-bundle'),
+};

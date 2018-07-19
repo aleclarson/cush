@@ -1,11 +1,12 @@
-cush = require '../index'
+uhoh = (error, code) ->
 
-uhoh = (err) ->
-  if err.constructor is Object
-    err = Object.assign new Error(err.message), err
-  else err = new Error err
-  Error.captureStackTrace err, uhoh
-  cush.emit 'error', err
-  throw err
+  if error.constructor is Object
+    error = Object.assign new Error(error.message), error
+  else
+    error = new Error error
+    error.code = code if code?
+
+  Error.captureStackTrace error, uhoh
+  throw error
 
 module.exports = uhoh

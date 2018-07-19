@@ -1,6 +1,8 @@
 {evalFile} = require './utils'
+Emitter = require '@cush/events'
 cush = require 'cush'
 path = require 'path'
+log = require('lodge').debug('cush')
 wch = require 'wch'
 fs = require 'fs'
 
@@ -10,20 +12,25 @@ cush.projects =
 cush.project = (root) ->
   projects[root] or= new Project root
 
-class Project
+class Project extends Emitter
   constructor: (root) ->
-    configPath = path.join root, 'cush.config.js'
-    @root = cush.package root
-    @config = evalFile(configPath) or {}
+    super()
+    @root = root
+    @config = evalFile(path.join root, 'cush.config.js') or {}
+    @watcher = null
     @bundles = new Set
-    @watcher =
-      wch.stream root,
+
+  watch: ->
+    @watcher or=
+      wch.stream @root,
         only: ['cush.config.js']
       .on 'data', (evt) =>
-        @config = evalFile(configPath) or {}
+        @config = evalFile(evt.path) or {}
         @bundles.forEach (bundle) ->
-          bundle._unloadModules()
-          bundle._configure()
+          bundle._unload()
+          bundle._rebuild()
+        @emit 'config'
+    return this
 
   drop: (bundle) ->
 
@@ -36,3 +43,18 @@ class Project
     if @bundles.size is 0
       @watcher.destroy()
       delete projects[@root.path]
+
+  _configure: (bundle) ->
+
+    # format-specific configuration
+    if fn = @config[bundle.constructor.id]
+      try await fn.call bundle
+      catch err
+        log.error err
+
+    # bundle-specific configuration
+    config = @config.bundles[bundle.main.name]
+    if fn = config?.init
+      try await fn.call bundle
+      catch err
+        log.error err

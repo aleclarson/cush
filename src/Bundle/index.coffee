@@ -1,88 +1,108 @@
-BundleEvent = require './Event'
+{evalFile, getCallSite, getModule} = require '../utils'
+{loadBundle, dropBundle} = require '../workers'
+knownExts = require '@cush/known-exts'
+isObject = require 'is-object'
+Emitter = require '@cush/events'
+Package = require './Package'
+Module = require 'module'
+Asset = require './Asset'
 build = require './build'
-noop = require 'noop'
-path = require 'path'
 cush = require 'cush'
+path = require 'path'
+log = require('lodge').debug('cush')
+fs = require 'saxon/sync'
 
-class Bundle
-  constructor: (dev, target) ->
-    @id = null        # bundle identifier
-    @dev = dev        # development mode
-    @target = target  # targeted platform
-    @root = null      # the root package
-    @main = null      # the main module
-    @exts = null      # implicit file extensions
-    @time = 0         # time of last build
-    @valid = false    # not outdated?
-    @elapsed = null   # time spent building
-    @files = []       # ordered files
-    @packages = []    # ordered packages
-    @modules = []     # sparse module map
-    @missed = []      # missing dependencies
-    @_config = null   # plugin config
-    @_events = null   # event hooks
-    @_format = null   # bundle format
-    @_result = null   # build promise
+nodeModulesRE = /\/node_modules\//
+
+class Bundle extends Emitter
+  constructor: (opts) ->
+    super()
+    @id = opts.id
+    @dev = opts.dev
+    @root = null
+    @main = null
+    @target = opts.target
+    @assets = []
+    @packages = Object.create null
+    @plugins = opts.plugins or []
+    @parsers = opts.parsers or []
+    @project = null
+    @valid = false
+    @state = null
+    @time = 0
+    @_result = null
+    @_loading = null
+    @_loadedPlugins = new Set
+    @_nextAssetId = 1
+    @_workers = []
+    @_config = null
+    @_events = null
+    @_extRE = null
+
+  relative: (filename) ->
+    filename.slice @root.path.length + 1
+
+  load: ->
+    @_loading or= @_configure()
 
   read: ->
     @_result or= @_build()
 
-  destroy: ->
-    @_rev = 0  # cancel the current build
-    @read = noop.val Promise.resolve()  # prevent future builds
-    @packages.forEach @_dropPackage.bind this  # remove unused packages
-    @_project.drop this  # remove unused projects
-    return this
+  use: (plugins) ->
+    if !Array.isArray plugins
+      plugins = [plugins]
 
-  relative: (mod) ->
-    throw Error 'Expected a module' if !mod or !mod.pack
-    mod.pack.resolve(mod.file).slice @root.path.length + 1
+    Promise.all plugins.map (val) =>
+      if Array.isArray val
+        return @use val
 
-  has: (path) ->
-    if typeof path is 'string'
-      path = path.split '.'
+      plugin =
+        if typeof val is 'string'
+        then await resolvePlugin val, @main.path()
+        else val
 
-    obj = @_config
-    last = path.length - 1
-    for i in [0 ... last]
-      obj = obj[path[i]]
-      if !obj or typeof obj isnt 'object'
-        return false
+      return if !plugin or @_loadedPlugins.has plugin
+      @_loadedPlugins.add plugin
 
-    return obj[path[last]] isnt undefined
+      if typeof val is 'string'
+        plugin.id = val
 
-  get: (path) ->
-    if typeof path is 'string'
-      path = path.split '.'
+      if plugin.worker?
+        if typeof plugin.worker is 'string'
+        then @worker plugin.worker
+        else log.warn '`worker` must be a file path: %O', plugin
 
-    obj = @_config
-    last = path.length - 1
-    for i in [0 ... last]
-      obj = obj[path[i]]
-      return if !obj?
-      if obj.constructor isnt Object
-        path = path.slice(0, i + 1).join '.'
-        throw TypeError "'#{path}' is not an object"
+      if typeof plugin.default is 'function'
+        plugin = plugin.default
 
-    return obj[path[last]]
+      if typeof plugin is 'function'
+        try await plugin.call this
+        catch err
+          log.error err
+          return
 
-  set: (path, val) ->
-    if typeof path is 'string'
-      path = path.split '.'
+  worker: (val) ->
 
-    obj = @_config
-    last = path.length - 1
-    for i in [0 ... last]
-      prev = obj
-      obj = prev[path[i]]
-      if !obj?
-        prev[path[i]] = obj = {}
-      else if obj.constructor isnt Object
-        path = path.slice(0, i + 1).join '.'
-        throw TypeError "'#{path}' is not an object"
+    if typeof val is 'function'
+      frame = getCallSite(1)
+      @_workers.push
+        func: val.toString()
+        path: frame.getFileName()
+        line: frame.getLineNumber()
+      return
 
-    obj[path[last]] = val
-    return this
+    if typeof val isnt 'string'
+      throw TypeError "`worker` must be passed a filename or function"
+
+    if !path.isAbsolute val
+      val = path.resolve path.dirname(getCallSite(1).getFileName()), val
+
+    @_workers.push path: val
+    return
+
+  parseExt: (name) ->
+    if match = @_extRE.exec name
+      return match[0]
 
   getSourceMapURL: (value) ->
     '\n\n' + @_wrapSourceMapURL \
@@ -90,77 +110,75 @@ class Bundle
       value + '.map' or
       value.toUrl()
 
-  hook: (id, hook) ->
-    if !event = @_events[id]
-      @_events[id] = event = new BundleEvent
-    if typeof hook is 'function'
-      event.add hook
-      return this
-    return event
+  destroy: ->
+    @_result = Promise.resolve null
 
-  hookLeft: (id, hook) ->
-    if typeof hook isnt 'function'
-      throw TypeError '`hook` must be a function'
-    if !event = @_events[id]
-      @_events[id] = event = new BundleEvent
-    event.add hook, -1
-    return this
+    @main = null
+    @assets = null
 
-  hookRight: (id, hook) ->
-    if typeof hook isnt 'function'
-      throw TypeError '`hook` must be a function'
-    if !event = @_events[id]
-      @_events[id] = event = new BundleEvent
-    event.add hook, 1
-    return this
+    @packages.forEach (pack) ->
+      pack.watcher?.destroy()
+    @packages = null
 
-  hookModules: (exts, hook) ->
-    if Array.isArray exts
-      exts.forEach (ext) => @hook 'module' + ext, hook
-    else @hook 'module' + exts, hook
+    @project.drop this
+    @project = null
+
+    delete cush.bundles[@id]
+    dropBundle this
+
+    @emitAsync 'destroy'
+    return
+
+  _getInitialConfig: ->
+    ctr = @constructor
+    exts: ctr.exts?.slice(0) or []
+
+  _onConfigure: ->
+    none = []
+    exts = knownExts.concat @get('exts', none), @get('knownExts', none)
+    exts = Array.from(new Set exts).sort().map (ext) -> ext.slice 1
+    exts = exts.join('|').replace /\./g, '\\.'
+    @_extRE = new RegExp "\\.(#{exts})$"
+    return
 
   _configure: ->
-    @_config = {}
-    try
-      @_events = events = {}
-      @_format.plugins?.forEach (plugin) =>
-        plugin.call this
+    @_config = @_getInitialConfig()
+    @_events = events = {}
 
-      if config = @_project.config[@_format.name]
-        config.call this
+    await @_callPlugins()
+    await @project._configure(this)
 
-      if events.config
-        events.config.emit()
-        events.config = null
+    if events.config
+      events.config.emit()
+      events.config = null
 
-    catch err
-      cush.emit 'error',
-        message: 'Failed to configure bundle'
-        error: err
-        root: @root.path
-      return this
-
-    @_invalidate() if @valid
+    @_onConfigure()
+    loadBundle this
     return this
+
+  _callPlugins: ->
+    if @plugins.length
+      return @use @plugins
 
   _build: -> try
     @valid = true
+    @state = {}
+
+    await @load()
+    return null if !@valid
+
     time = process.hrtime()
-    bundle = await build this
-    if @valid
-      time = process.hrtime time
-      @elapsed = Math.ceil time[0] * 1e3 + time[1] * 1e-6
+    bundle = await build this, @state
+    return null if !@valid
 
-      # Force rebuild when dependencies are missing.
-      if @missed.length
-        @_invalidate()
-
-    # Return the payload.
+    time = process.hrtime time
+    @state.elapsed = Math.ceil time[0] * 1e3 + time[1] * 1e-6
     return bundle
 
   catch err
     # Errors are ignored when the next build is automatic.
     if @valid
+      @_result = null
       @_invalidate()
       throw err
 
@@ -168,78 +186,101 @@ class Bundle
   # until the next build is triggered manually.
   _invalidate: ->
     @valid = false
-    @_result = null
+    @emitAsync 'invalidate'
     return
 
-  # Invalidate the current build, and trigger an automatic rebuild.
+  # Schedule an automatic rebuild.
   _rebuild: ->
-    if @valid
-      @valid = false
-
-      if @_result
-        @_result = @_result
-          .then noEarlier 200 + Date.now()
-          .then @_build.bind this
-        return
-
-      @_build()
+    if @_result
+      @_invalidate() if @valid
+      @_result = @_result
+        .then noEarlier 200 + Date.now()
+        .then @_build.bind this
       return
 
-  # Return a Module object for the given file object.
-  _getModule: (file, pack) ->
-    if !mod = @modules[file.id]
-      # New modules are put in the previous build's module cache.
-      # When the new build finishes, old modules are released.
-      @modules[file.id] = mod = {
-        file, pack
-        content: null
-        deps: null    # ordered dependency objects
-        map: null     # sourcemap
-        ext: null     # file extension
-      }
+  _unload: ->
+    @_invalidate() if @valid
 
-    return mod
+    # Reset the main module.
+    @main.content = null
+    @main.deps = null
 
-  # Run hooks for a module.
-  _loadModule: (mod) ->
-    {ext} = mod
-    if event = @_events['module' + ext]
-      {hooks} = event
-      for i in [0 ... hooks.length]
-        await hooks[i] mod
-        if mod.ext isnt ext
-          return @_loadModule mod
+    # Reset the asset cache.
+    @assets = [,@main]
+    @_nextAssetId = 2
 
-  _unloadModule: (id) ->
-    if mod = @modules[id]
-      mod.content = null
-      @_rebuild()
+    # Reset the root package.
+    @root.crawled = false
+    @root.assets = Object.create null
+    @root.assets[@main.name] = @main
+    @root.users = new Set
 
-  _unloadModules: ->
-    @_invalidate()
-    @modules.forEach (mod) ->
-      mod.content = null
+    # Reset the package cache.
+    @packages = Object.create null
+    @packages[@root.data.name] =
+      new Map [[@root.data.version, @root]]
 
-  # Run hooks for a package.
-  _loadPackage: (pack) ->
-    Promise.all @_events.package.hooks.map (hook) -> hook pack
+    @_loading = null
+    @_loadedPlugins.clear()
+    return
 
-  _dropPackage: (pack) ->
-    pack.bundles.delete this
-    if !pack.bundles.size
-      pack._unload()
-    return this
+  _loadAsset: (name, pack) ->
+    assetId = @_nextAssetId++
+    @assets[assetId] = asset =
+      new Asset assetId, name, pack
+    pack.assets[name] = asset
+    return asset
 
-  _joinModules: (modules) ->
-    throw Error 'Bundle format must override `_joinModules`'
+  _loadPackage: (root, data) ->
+    if !path.isAbsolute root
+      throw Error "Package root must be absolute: '#{root}'"
 
-  _wrapSourceMapURL: (url) ->
+    data ?= evalFile path.join(root, 'package.json')
+
+    if !data.name
+      throw Error 'Package has no "name" field: ' + root
+    if !data.version
+      throw Error 'Package has no "version" field: ' + root
+
+    if versions = @packages[data.name]
+      return pack if pack = versions.get data.version
+    else @packages[data.name] = versions = new Map
+
+    versions.set data.version,
+      pack = new Package root, data
+
+    root = fs.follow root, true
+    pack._watch root if !nodeModulesRE.test root
+
+    pack.bundle = this
+    return pack
+
+  _concat: ->
+    throw Error 'Bundle format must override `_concat`'
+
+  _wrapSourceMapURL: ->
     throw Error 'Bundle format must override `_wrapSourceMapURL`'
 
+require('./PluginMixin')(Bundle)
 module.exports = Bundle
+
+#
+# Helpers
+#
 
 # Create a function that enforces a minimum delay.
 noEarlier = (time) ->
   return -> new Promise (resolve) ->
     delay = Math.max 0, time - Date.now()
     delay and setTimeout(resolve, delay) or resolve()
+
+resolvePlugin = (name, main) ->
+  if name.indexOf('cush-') is -1
+    name = 'cush-plugin-' + name
+  plugin = tryRequire(name, getModule main)
+  plugin or= await lazyRequire name
+  plugin
+
+tryRequire = (request, parent) ->
+  try filename = Module._resolveFilename(request, parent)
+  return parent.require filename if filename

@@ -4,6 +4,7 @@ semver = require 'semver'
 path = require 'path'
 cush = require '../index'
 uhoh = require './uhoh'
+log = require('lodge').debug('cush')
 fs = require 'saxon/sync'
 
 # TODO: when should packages be updated?
@@ -11,12 +12,11 @@ lazyRequire = (name, range = '*') ->
   if version = semver.valid(range) or matchVersion(name, range)
     dep = path.join cush.PACKAGE_DIR, name + '-' + version
   if !dep or !fs.exists dep
-    cush.emit 'log', {type: 'install', name, range}
     if url = await tarUrl name, range
+      log 'Installing dependency:', log.cyan(url)
       res = await tarInstall url, cush.PACKAGE_DIR
       if res.stderr
-        if cush.verbose
-          console.error res.stderr
+        log.error res.stderr
         uhoh "Failed to install: '#{name}@#{range}'"
       else dep = res.path
     else uhoh "Unknown version: '#{name}@#{range}'"

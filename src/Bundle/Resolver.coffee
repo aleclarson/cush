@@ -1,29 +1,30 @@
 relative = require '@cush/relative'
 path = require 'path'
+log = require('lodge').debug('cush')
 
 scopedRE = /^((?:@[a-z._-]+\/)?[a-z._-]+)(?:\/(.+))?$/
 
-Resolver = (bundle, resolved) ->
-  {target, exts, missed} = bundle
+Resolver = (bundle, resolved, missing) ->
+  {target} = bundle
+
+  exts = bundle.get('exts')
 
   resolveImport = (parent, ref) ->
-    {file, pack} = parent
+    pack = parent.owner
 
     # ./ or ../
     if ref[0] is '.'
-      id = relative file.name, ref
+      id = relative parent.name, ref
       if id is null
         cush.emit 'warning',
           message: 'Unsupported import path: ' + ref
           parent: bundle.relative parent
         return false
 
-      # use the main module if referencing package root
-      if !id and !id = resolveMain pack
-        cush.emit 'warning',
-          message: '"main" path is invalid: ' + pack.path
-          package: pack.path
-        return false
+      if id is ''
+        # use the main module if referencing package root
+        id = resolveMain pack, bundle
+        isMain = true
 
     # node_modules
     else if !path.isAbsolute ref
@@ -36,12 +37,10 @@ Resolver = (bundle, resolved) ->
         if !pack = pack.require match[1]
           return false
 
-        # use the main module if nothing follows the package name
-        if !id = match[2] or resolveMain pack
-          cush.emit 'warning',
-            message: '"main" path is invalid: ' + pack.path
-            package: pack.path
-          return false
+        if !id = match[2]
+          # use the main module if nothing follows the package name
+          id = resolveMain pack, bundle
+          isMain = true
 
     else # absolute paths are forbidden 💥
       cush.emit 'warning',
@@ -49,43 +48,63 @@ Resolver = (bundle, resolved) ->
         parent: bundle.relative parent
       return false
 
-    await pack.crawl()
-    if file = pack.search id, target, exts
-      bundle._getModule file, pack
-    else false
+    if isMain and pack.main
+      return pack.main
 
-  # Resolve all dependencies of a module.
+    pack.crawl()
+    if asset = pack.search id, target, exts
+      pack.main = asset if isMain
+      return asset
+
+    if process.env.DEBUG
+      log.warn 'Failed to resolve %O from %O', ref, bundle.relative parent.path()
+    return false
+
+  # Resolve all dependencies of an asset.
   return (parent) ->
-    modules = {}
+    assets = {}
     parent.deps.forEach (dep, i) ->
-      mod = dep.module
-      if !mod or !mod.file.id
+      {ref, asset} = dep
+
+      if !asset or !asset.id or asset.time > bundle.time
+        asset = assets[ref]
 
         # Never resolve the same ref twice.
-        if !mod = modules[dep.ref]
-          modules[dep.ref] = mod =
-            resolveImport parent, dep.ref
-          resolved.push mod
+        if asset is undefined
+          assets[ref] = asset =
+            resolveImport parent, ref
 
-        if mod = await mod
-          dep.module = mod
+          if asset
+            dep.asset = asset
+            resolved.push asset
+            return
+
+        else if asset
+          dep.asset = asset
           return
 
-        # The module cannot be found.
-        missed.push [parent, i]
+        # The asset cannot be found.
+        missing.push [parent, dep]
         return
 
-      # The module is good to reuse. ✨
-      if !modules[dep.ref]
-        modules[dep.ref] = mod
-        resolved.push mod
-      return
+      # The asset is good to reuse. ✨
+      if !assets[ref]
+        assets[ref] = asset
+        resolved.push asset
+        return
+
+    # Return the ordered assets.
+    return assets
 
 module.exports = Resolver
 
 # Resolve the main module of a package.
-resolveMain = (pack) ->
-  if id = pack.data.main
+resolveMain = (pack, bundle) ->
+
+  if bundle._config.browser isnt false
+    id = pack.data.browser
+
+  if id or= pack.data.main
     if id[0] is '.'
       relative '', id
     else id

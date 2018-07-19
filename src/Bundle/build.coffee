@@ -1,94 +1,108 @@
+{loadAsset, printStats} = require '../workers'
+{each} = require '../utils'
 Resolver = require './Resolver'
-loadFile = require '../fs/loadFile'
+elaps = require 'elaps'
 cush = require 'cush'
 
-build = (bundle, opts) ->
+resolved = Promise.resolve()
+
+build = (bundle, state) ->
   timestamp = Date.now()
-  bundle.missed = []
 
-  files = []     # ordered files
+  assets = []    # ordered assets
+  loaded = []    # sparse asset map for deduping
   packages = []  # ordered packages
-  modules = []   # sparse module map (file => module)
 
-  pending = []
-  resolve = Resolver bundle, pending
+  queue = []     # queued assets
+  missing = []   # missing dependencies
+  resolve = Resolver bundle, queue, missing
 
-  loadModule = (mod) ->
-    return if !mod or modules[mod.file.id]
-    {file, pack} = mod
+  t1 = elaps.lazy 'read %n assets'
+  t2 = elaps.lazy 'resolve dependencies'
 
-    # Cache the module.
-    modules[file.id] = mod
-    files.push file
+  assetHook = bundle.hook 'asset'
+  loadAsset = (asset) ->
+    return if loaded[asset.id]
+    loaded[asset.id] = true
+    assets.push asset
 
-    # Cache its package.
-    if packages.indexOf(pack) is -1
-      packages.push pack
+    if packages.indexOf(asset.owner) == -1
+      packages.push asset.owner
 
-      # Load packages not in the previous build.
-      if !bundle.packages[pack.id]
-        pack.bundles.add bundle
-        await bundle._loadPackage pack
+    # Wait for the load queue to be cleared.
+    await resolved
 
-    # Read file, then apply global plugins.
-    if file.content is null
-      await loadFile file, mod.pack
+    # Read the asset.
+    if asset.content == null
+      lap = t1.start()
+      await readAsset asset
+      lap.stop()
 
-    # Apply bundle plugins.
-    if mod.content is null
-      mod.content = file.content
-      mod.map = file.map
-      mod.ext = file.ext
-      await bundle._loadModule mod
-      await parseImports mod
+    # Resolve its dependencies.
+    if asset.deps
+      lap = t2.start()
+      await resolve asset
+      lap.stop()
 
-    # Resolve any imports.
-    if mod.deps
-      await resolve mod
+    # Let plugins inspect/alter the asset.
+    assetHook.emit asset, state
+    return
 
   # Load the main module.
-  await loadModule bundle.main
+  await loadAsset bundle.main
 
   # Keep loading modules until stopped or finished.
-  while bundle.valid and pending.length
-    await Promise.all (await drain pending).map loadModule
+  while bundle.valid and queue.length
+    await mapFlush queue, loadAsset
+
+  # The bundle is invalid if dependencies are missing.
+  if missing.length
+    state.missing = missing
+    bundle._invalidate()
+
+  # Exit early for invalid bundles.
+  if !bundle.valid
+    return null
 
   # Update the build time.
   bundle.time = timestamp
 
-  # Exit early for invalid bundles.
-  if !bundle.valid or bundle.missed.length
-    return null
+  t1.print()
+  t2.print()
+  printStats bundle
+
+  dropUnusedPackage = (pack) ->
+    pack._unload() if packages.indexOf(pack) == -1
 
   # Purge unused packages.
-  bundle.packages.forEach (pack) ->
-    ~packages.indexOf(pack) or bundle._dropPackage pack
+  each bundle.packages, (versions, name) ->
+    versions.forEach dropUnusedPackage
 
-  bundle.files = files
-  bundle.modules = modules
-  bundle.packages = packages
-
-  # Create the bundle string.
-  bundle._joinModules()
+  # Concatenate the assets.
+  t3 = elaps 'concatenate assets'
+  result = await bundle._concat assets, packages
+  t3.stop()
+  return result
 
 module.exports = build
 
-# Wrap the given queue with Promise.all before emptying it.
-drain = (queue) ->
-  promise = Promise.all queue
+# Combine all promises in the given queue before clearing it.
+mapFlush = (queue, iter) ->
+  promise = Promise.all queue.map iter
   queue.length = 0
   promise
 
-# Parse the imports of a module, and reuse old resolutions.
-parseImports = (mod) ->
+readAsset = (asset) ->
 
-  if mod.deps
+  if asset.deps
     prev = Object.create null
-    mod.deps.forEach (dep) ->
-      prev[dep.ref] = dep.module
+    asset.deps.forEach (dep) ->
+      prev[dep.ref] = dep.asset
       return
 
-  mod.deps = await cush._parseImports mod
-  if prev then mod.deps.forEach (dep) ->
-    dep.module = prev[dep.ref] or null
-    return
+  await asset._load()
+
+  if prev and asset.deps
+    asset.deps.forEach (dep) ->
+      dep.asset = prev[dep.ref] or null
+      return
