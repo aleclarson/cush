@@ -16,14 +16,16 @@ build = (bundle, state) ->
   queue = []     # queued assets
   missing = []   # missing dependencies
   resolve = Resolver bundle, queue, missing
+  resolvedCount = 0
 
-  t1 = elaps.lazy 'read %n assets'
-  t2 = elaps.lazy 'resolve dependencies'
+  readTimer = elaps.lazy()
+  resolveTimer = elaps.lazy()
 
   assetHook = bundle.hook 'asset'
   ownerHook = bundle.hook 'package'
 
   loadAsset = (asset) ->
+    resolvedCount += 1
     return if loaded[asset.id]
     loaded[asset.id] = true
     assets.push asset
@@ -40,13 +42,13 @@ build = (bundle, state) ->
 
     # Read the asset.
     if asset.content == null
-      lap = t1.start()
+      lap = readTimer.start()
       await readAsset asset
       lap.stop()
 
     # Resolve its dependencies.
     if asset.deps
-      lap = t2.start()
+      lap = resolveTimer.start()
       await resolve asset
       lap.stop()
 
@@ -73,8 +75,8 @@ build = (bundle, state) ->
   # Update the build time.
   bundle.time = timestamp
 
-  t1.print()
-  t2.print()
+  readTimer.print 'loaded %n assets in %t'
+  resolveTimer.print 'resolved %O dependencies in %t', resolvedCount
   printStats bundle
 
   dropUnusedPackage = (pack) ->

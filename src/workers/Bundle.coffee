@@ -23,7 +23,7 @@ class Bundle
     @_extRE = null
     @_timers = {}
     @_loadTime = elaps.lazy()
-    @_assetsLoaded = 0
+    @_traceTime = elaps.lazy()
     @_configure props
 
   relative: (filename) ->
@@ -32,10 +32,12 @@ class Bundle
   # The "transform" phase occurs after reading the asset.
   transform: (exts, fn) ->
 
-    hook = (asset, pack) ->
+    hook = (asset, pack) =>
       result = fn asset, pack
       if result and result.map
+        @_traceTime.start()
         mapSources asset, result
+        @_traceTime.stop()
       return
 
     hook.source = @_getSource(1)
@@ -78,10 +80,11 @@ class Bundle
         await Promise.all event.hooks.map (hook) -> hook pack
       t2.stop()
 
-    t2 = elaps 'load asset %O', @relative(path.join root, name)
+    assetPath = path.join root, name
+    t2 = elaps 'load asset %O', @relative(assetPath)
     asset =
       ext: @_parseExt name
-      path: assetPath = path.join(root, name)
+      path: assetPath
       content: await fs.read(assetPath)
       deps: null
       map: null
@@ -107,7 +110,6 @@ class Bundle
         await hook asset, pack
         lap.stop()
 
-    @_assetsLoaded++
     t2.stop()
     t1.stop()
 
@@ -121,14 +123,15 @@ class Bundle
       elaps.lazy 'hook %O', path.relative('', hook.source.path)
 
   _printStats: ->
-    log ''
-    log 'worker #' + process.env.WORKER_ID
-    log 'assets loaded:', @_assetsLoaded
-    @_loadTime.print 'time spent loading: %t'
-    for id, timer of @_timers
-      timer.print()
+    if /\bcush\b/.test process.env.DEBUG
+      log ''
+      log 'worker #' + process.env.WORKER_ID
+      @_loadTime.print 'loaded %n assets in %t'
+      @_traceTime.print 'source map tracing took %t'
+      for id, timer of @_timers
+        timer.print()
 
-    @_assetsLoaded = 0
+    @_traceTime.reset()
     @_loadTime.reset()
     @_timers = {}
     return
