@@ -15,9 +15,9 @@
     "utils"
   ],
   "dependencies": {
-    "@cush/css-bundle": "^0.1.0",
+    "@cush/css-bundle": "^0.2.0",
     "@cush/events": "^1.0.2",
-    "@cush/js-bundle": "^0.1.0",
+    "@cush/js-bundle": "^0.2.0",
     "@cush/known-exts": "^0.0.1",
     "@cush/relative": "^0.0.1",
     "@cush/sorcery": "^1.4.5",
