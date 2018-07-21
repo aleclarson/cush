@@ -26,8 +26,11 @@ build = (bundle, state) ->
     loaded[asset.id] = true
     assets.push asset
 
-    if packages.indexOf(asset.owner) == -1
-      packages.push asset.owner
+    {owner} = asset
+    if packages.indexOf(owner) == -1
+      packages.push owner
+      owner.missedAsset = false
+      owner.missedPackage = false
 
     # Wait for the load queue to be cleared.
     await resolved

@@ -18,6 +18,8 @@ class Package
     @owner = null
     @bundle = null
     @worker = null
+    @missedAsset = false
+    @missedPackage = false
     @crawled = false
     @watcher = null
     @skip = []
@@ -98,6 +100,7 @@ class Package
     try
       data = evalFile path.join(@path, 'package.json')
       if (name is data.name) and (version is data.version)
+        @bundle._rebuild() if @missedPackage
         @data = data
         return true
       return false
@@ -121,7 +124,9 @@ class Package
 
       if /^node_modules\//.test evt.name
         # Skip new packages.
-        return if evt.new
+        if evt.new
+          @bundle._rebuild() if @missedPackage
+          return
 
         # Skip unused packages.
         evt.name = path.dirname evt.name
@@ -140,6 +145,7 @@ class Package
 
         if evt.new
           @assets[evt.name] = true
+          @bundle._rebuild() if @missedAsset
           return
 
         # Packages without a parent must reload their own data.

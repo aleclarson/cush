@@ -10,7 +10,7 @@ Resolver = (bundle, resolved, missing) ->
   exts = bundle.get('exts')
 
   resolveImport = (parent, ref) ->
-    pack = parent.owner
+    {owner} = parent
 
     # ./ or ../
     if ref[0] is '.'
@@ -23,18 +23,18 @@ Resolver = (bundle, resolved, missing) ->
 
       if id is ''
         # use the main module if referencing package root
-        id = resolveMain pack, bundle
+        id = resolveMain owner, bundle
         isMain = true
 
     # node_modules
     else if !path.isAbsolute ref
       if match = scopedRE.exec ref
+        if !pack = owner.require match[1]
 
-        deps = pack.data.dependencies
-        if !deps or !deps[match[1]]
-          return false
+          if process.env.DEBUG
+            log.warn 'Failed to resolve %O from %O', ref, bundle.relative parent.path()
 
-        if !pack = pack.require match[1]
+          owner.missedPackage = true
           return false
 
         if !id = match[2]
@@ -48,6 +48,7 @@ Resolver = (bundle, resolved, missing) ->
         parent: bundle.relative parent
       return false
 
+    pack or= owner
     if isMain and pack.main
       return pack.main
 
@@ -58,6 +59,8 @@ Resolver = (bundle, resolved, missing) ->
 
     if process.env.DEBUG
       log.warn 'Failed to resolve %O from %O', ref, bundle.relative parent.path()
+
+    pack.missedAsset = true
     return false
 
   # Resolve all dependencies of an asset.
