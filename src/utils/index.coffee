@@ -12,6 +12,7 @@ module.exports =
   crawl: require './crawl'
   each: each
   evalFile: require './evalFile'
+  extRegex: require './extRegex'
   findPackage: require './findPackage'
   getCallSite: require './getCallSite'
   getModule: require './getModule'

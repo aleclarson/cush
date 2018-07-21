@@ -2,11 +2,14 @@ snipSyntaxError = require '../utils/snipSyntaxError'
 ErrorTracer = require '../utils/ErrorTracer'
 mapSources = require '../utils/mapSources'
 getModule = require '../utils/getModule'
+extRegex = require '../utils/extRegex'
 elaps = require 'elaps'
 path = require 'path'
 log = require('lodge').debug('cush')
 fs = require 'saxon'
 vm = require 'vm'
+
+empty = []
 
 class Bundle
   constructor: (props) ->
@@ -17,6 +20,7 @@ class Bundle
     @packages = {}
     @_events = {}
     @_config = props.config
+    @_extRE = null
     @_timers = {}
     @_loadTime = elaps.lazy()
     @_assetsLoaded = 0
@@ -53,7 +57,13 @@ class Bundle
         then wrapPlugin(plugin).call this
         else require plugin.path
       plugin.call this
+
+    @_extRE = extRegex @get('exts') or empty, @get('known exts') or empty
     return
+
+  _parseExt: (name) ->
+    if match = @_extRE.exec name
+      return match[0]
 
   # Run hooks for a module.
   _loadAsset: (name, root) ->
@@ -70,7 +80,7 @@ class Bundle
 
     t2 = elaps 'load asset %O', @relative(path.join root, name)
     asset =
-      ext: path.extname(name)
+      ext: @_parseExt name
       path: assetPath = path.join(root, name)
       content: await fs.read(assetPath)
       deps: null

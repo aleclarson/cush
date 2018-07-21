@@ -38,7 +38,7 @@ class Package
 
   search: (name, target, exts) ->
 
-    if ext = @bundle.parseExt name
+    if ext = @bundle._parseExt name
       asset = @_loadAsset(name.slice(0, 1 - ext.length) + target + ext)
       return asset or @_loadAsset(name)
 

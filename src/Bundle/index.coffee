@@ -1,6 +1,5 @@
-{evalFile, getCallSite, getModule} = require '../utils'
+{evalFile, extRegex, getCallSite, getModule, uhoh} = require '../utils'
 {loadBundle, dropBundle} = require '../workers'
-knownExts = require '@cush/known-exts'
 isObject = require 'is-object'
 Emitter = require '@cush/events'
 Package = require './Package'
@@ -12,6 +11,7 @@ path = require 'path'
 log = require('lodge').debug('cush')
 fs = require 'saxon/sync'
 
+empty = []
 nodeModulesRE = /\/node_modules\//
 
 class Bundle extends Emitter
@@ -100,10 +100,6 @@ class Bundle extends Emitter
     @_workers.push path: val
     return
 
-  parseExt: (name) ->
-    if match = @_extRE.exec name
-      return match[0]
-
   getSourceMapURL: (value) ->
     '\n\n' + @_wrapSourceMapURL \
       typeof value is 'string' and
@@ -129,16 +125,16 @@ class Bundle extends Emitter
     @emitAsync 'destroy'
     return
 
+  _parseExt: (name) ->
+    if match = @_extRE.exec name
+      return match[0]
+
   _getInitialConfig: ->
     ctr = @constructor
     exts: ctr.exts?.slice(0) or []
 
   _onConfigure: ->
-    none = []
-    exts = knownExts.concat @get('exts', none), @get('knownExts', none)
-    exts = Array.from(new Set exts).sort().map (ext) -> ext.slice 1
-    exts = exts.join('|').replace /\./g, '\\.'
-    @_extRE = new RegExp "\\.(#{exts})$"
+    @_extRE = extRegex @get('exts') or empty, @get('known exts') or empty
     return
 
   _configure: ->
