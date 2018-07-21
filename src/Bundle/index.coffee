@@ -243,12 +243,12 @@ class Bundle extends Emitter
     if !path.isAbsolute root
       throw Error "Package root must be absolute: '#{root}'"
 
-    data ?= evalFile path.join(root, 'package.json')
-
+    if !data or= evalFile path.join(root, 'package.json')
+      uhoh 'Missing package.json', 'NOT_PACKAGE'
     if !data.name
-      throw Error 'Package has no "name" field: ' + root
+      uhoh 'Package has no "name" field', 'NO_NAME'
     if !data.version
-      throw Error 'Package has no "version" field: ' + root
+      uhoh 'Package has no "version" field', 'NO_VERSION'
 
     if versions = @packages[data.name]
       return pack if pack = versions.get data.version
