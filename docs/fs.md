@@ -49,7 +49,7 @@ The package containing the main module.
 
 ### `main: Asset`
 
-The main module 
+The main module
 
 ### `target: string`
 
@@ -129,7 +129,7 @@ Only callable within a plugin or your `cush.config.js` module.
 
 Extend the worker farm with a plugin.
 
-If you pass a function, it should be declared where it's passed in. Otherwise, it won't be as easily debuggable.
+If you pass a function, it should be declared where it's passed in. Otherwise, it won't be as easily debuggable. The function won't have access to anything outside it.
 
 [Learn more](./workers.md) about workers.
 
