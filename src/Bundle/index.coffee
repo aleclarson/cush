@@ -41,6 +41,7 @@ class Bundle extends Emitter
     @_config = null
     @_events = null
     @_extRE = null
+    @_init = opts.init
 
   relative: (filename) ->
     filename.slice @root.path.length + 1
@@ -146,6 +147,11 @@ class Bundle extends Emitter
   _configure: ->
     @_config = @_getInitialConfig()
     @_events = events = {}
+
+    if @_init
+      try await @_init()
+      catch err
+        log.error err
 
     await @_callPlugins()
     await @project._configure(this)

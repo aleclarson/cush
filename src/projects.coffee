@@ -44,17 +44,10 @@ class Project extends Emitter
       @watcher.destroy()
       delete projects[@root.path]
 
+  # Format-specific configuration
   _configure: (bundle) ->
-
-    # format-specific configuration
     if fn = @config[bundle.constructor.id]
       try await fn.call bundle
       catch err
         log.error err
-
-    # bundle-specific configuration
-    config = @config.bundles[bundle.main.name]
-    if fn = config?.init
-      try await fn.call bundle
-      catch err
-        log.error err
+      return
