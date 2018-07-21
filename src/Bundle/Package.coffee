@@ -1,4 +1,4 @@
-{crawl, each, ignored, noop} = require '../utils'
+{crawl, each, evalFile, findPackage, ignored, noop} = require '../utils'
 {dropPackage} = require '../workers'
 isObject = require 'is-object'
 cush = require 'cush'
@@ -65,24 +65,62 @@ class Package
     return null
 
   require: (ref) ->
-    name = path.join 'node_modules', ref
+    if name = @_getRequireName ref
+    then @_require name, ref
+    else null
 
+  _getRequireName: (ref) ->
+    if dep = @data.dependencies?[ref]
+      if dep.startsWith 'file:'
+        dep = path.relative '', dep.slice(5)
+        if dep[0] is '.' then null else dep
+      else path.join 'node_modules', ref
+    else null
+
+  _require: (name, ref) ->
     if pack = @assets[name]
       return pack
 
-    try
-      @assets[name] = pack =
-        @bundle._loadPackage path.join(@path, name)
-      pack.owner or= this
-      pack.users.add this
-      return pack
-
+    try pack = @bundle._loadPackage path.join(@path, name)
     catch err
-      cush.emit 'warning',
-        code: 'BAD_PACKAGE'
-        message: err.message
-        package: path.join(@path, name)
+
+      if err.code is 'NOT_PACKAGE'
+        if !pack = @_lookup ref
+          return null
+
+      else
+        cush.emit 'warning',
+          code: 'BAD_PACKAGE'
+          message: err.message
+          package: path.join(@path, name)
+        return null
+
+    @assets[name] = pack
+    pack.owner or= this
+    pack.users.add this
+    return pack
+
+  # Look for a dependency in an ancestor.
+  _lookup: (ref) ->
+    if this is @bundle.root
       return null
+
+    root = findPackage @path
+    data = evalFile path.join(root, 'package.json')
+    pack = @bundle.packages[data.name].get data.version
+
+    # Check `data.dependencies` for the expected location.
+    if name = pack._getRequireName ref
+      return pack._require name, ref
+
+    # NPM may hoist packages to a parent that has multiple children
+    # that use a package that the parent does *not* use directly.
+    name = path.join 'node_modules', ref
+    if fs.exists path.join(root, name)
+      return pack._require name, ref
+
+    # Try the next ancestor.
+    return pack._lookup ref
 
   _loadAsset: (name) ->
     asset = @assets[name]
