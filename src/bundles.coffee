@@ -1,4 +1,4 @@
-{findPackage, sha256, uhoh} = require './utils'
+{findPackage, merge, sha256, uhoh} = require './utils'
 cush = require 'cush'
 path = require 'path'
 fs = require 'saxon/sync'
@@ -34,6 +34,12 @@ cush.bundle = (main, opts) ->
   if !root = findPackage main
     uhoh '`main` has no package: ' + main, 'BAD_MAIN'
 
+  # Load the project.
+  project = cush.project root
+  if bundles = project.config.bundles
+    defaults = merge {}, bundles[path.relative root, main]
+    opts = merge defaults, opts
+
   # Resolve the bundle format.
   if !Bundle = opts.format or resolveFormat main
     uhoh '`main` has no bundle format: ' + main, 'NO_FORMAT'
@@ -53,10 +59,9 @@ cush.bundle = (main, opts) ->
   bundle.main = bundle._loadAsset main, pack
   pack.assets[main] or= bundle.main
 
-  # Load the project.
-  project = cush.project root
-  project.bundles.add bundle
+  # Watch the project.
   bundle.project = project.watch()
+  project.bundles.add bundle
   return bundle
 
 #
