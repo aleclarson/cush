@@ -249,8 +249,8 @@ class Package
     @assets = null
 
     # Update our dependent packages.
-    name = path.join 'node_modules', @data.name
     @users.forEach (user) =>
+      name = user._getRequireName @data.name
       if user.assets[name]
         delete user.assets[name]
       else deleteValue user.assets, this
