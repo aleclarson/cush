@@ -213,14 +213,14 @@ class Package
           return
 
       # Remove deleted assets and stale packages.
-      delete pack.assets[evt.name]
+      delete @assets[evt.name]
 
-    stream.on 'error', (err) ->
+    stream.on 'error', (err) =>
       cush.emit 'error',
         message: 'An error occurred on a watch stream'
         error: err
         root: root
-        pack: pack
+        pack: this
 
     @watcher = stream
     return this
