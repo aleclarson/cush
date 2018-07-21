@@ -15,6 +15,9 @@ empty = []
 nodeModulesRE = /\/node_modules\//
 
 class Bundle extends Emitter
+  @Asset: Asset
+  @Package: Package
+
   constructor: (opts) ->
     super()
     @id = opts.id
