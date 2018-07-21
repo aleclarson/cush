@@ -11,8 +11,8 @@ builtinParsers = [
 # Bundle constructor
 cush.bundle = (main, opts) ->
 
-  if !opts.target
-    uhoh '`target` option is undefined', 'NO_TARGET'
+  if !opts or typeof opts.target isnt 'string'
+    uhoh '`target` option must be a string', 'NO_TARGET'
 
   if !ext = path.extname main
     uhoh '`main` has no extension: ' + main, 'BAD_MAIN'

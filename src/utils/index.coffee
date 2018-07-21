@@ -18,7 +18,6 @@ module.exports =
   getModule: require './getModule'
   ignored: require './ignored'
   lazyRequire: require './lazyRequire'
-  mapSources: require './mapSources'
   merge: require './merge'
   noop: noop
   sha256: require './sha256'

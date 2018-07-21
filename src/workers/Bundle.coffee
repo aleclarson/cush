@@ -45,7 +45,7 @@ class Bundle
       exts.forEach (ext) => @hook 'asset' + ext, hook
     else @hook 'asset' + exts, hook
 
-  _configure: ({ plugins, parsers }) ->
+  _configure: ({plugins, parsers}) ->
 
     parsers.forEach (filename) =>
       for ext, parse of require(filename)
@@ -100,7 +100,7 @@ class Bundle
 
     catch err
       if err.line?
-        ErrorTracer(asset)(err, @relative asset.path)
+        ErrorTracer(asset)(err, @relative assetPath)
         err.snippet = snipSyntaxError(asset.content, err)
       throw err
 

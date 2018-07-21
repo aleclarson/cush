@@ -5,7 +5,7 @@ fs = require 'saxon/sync'
 evalFile = (file, ext) ->
   if !load = loaders[ext or path.extname file]
     throw Error "Cannot eval '#{file}' without a loader"
-  fs.isFile(file) and load(file) or null
+  if fs.isFile(file) then load(file) else null
 
 loaders =
 

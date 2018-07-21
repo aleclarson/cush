@@ -43,8 +43,8 @@ class Bundle extends Emitter
     @_extRE = null
     @_init = opts.init
 
-  relative: (filename) ->
-    filename.slice @root.path.length + 1
+  relative: (absolutePath) ->
+    absolutePath.slice @root.path.length + 1
 
   resolve: (relativePath) ->
     path.resolve @root.path, relativePath
@@ -85,30 +85,30 @@ class Bundle extends Emitter
           log.error err
           return
 
-  worker: (val) ->
+  worker: (arg) ->
 
-    if typeof val is 'function'
+    if typeof arg is 'function'
       frame = getCallSite(1)
       @_workers.push
-        func: val.toString()
+        func: arg.toString()
         path: frame.getFileName()
         line: frame.getLineNumber()
       return
 
-    if typeof val isnt 'string'
-      throw TypeError "`worker` must be passed a filename or function"
+    if typeof arg isnt 'string'
+      throw TypeError '`worker` must be passed a filename or function'
 
-    if !path.isAbsolute val
-      val = path.resolve path.dirname(getCallSite(1).getFileName()), val
+    if !path.isAbsolute arg
+      arg = path.resolve path.dirname(getCallSite(1).getFileName()), arg
 
-    @_workers.push path: val
+    @_workers.push path: arg
     return
 
-  getSourceMapURL: (value) ->
+  getSourceMapURL: (arg) ->
     '\n\n' + @_wrapSourceMapURL \
-      typeof value is 'string' and
-      value + '.map' or
-      value.toUrl()
+      typeof arg is 'string' and
+      arg + '.map' or
+      arg.toUrl()
 
   unload: ->
     @_unload()
@@ -204,7 +204,6 @@ class Bundle extends Emitter
       @_result = @_result
         .then noEarlier 200 + Date.now()
         .then @_build.bind this
-      return
 
   _unload: ->
     @_invalidate() if @valid
@@ -214,7 +213,7 @@ class Bundle extends Emitter
     @main.deps = null
 
     # Reset the asset cache.
-    @assets = [,@main]
+    @assets = [, @main]
     @_nextAssetId = 2
 
     # Reset the root package.

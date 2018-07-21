@@ -29,17 +29,15 @@ class Package
   relative: (absolutePath) ->
     absolutePath.slice @path.length + 1
 
+  resolve: (relativePath) ->
+    path.resolve @path, relativePath
+
   crawl: ->
     @crawled or= do =>
       crawl @path, @assets,
         skip: ignored @skip
       return true
     return this
-
-  resolve: (asset) ->
-    if typeof asset isnt 'string'
-      asset = asset.name
-    path.resolve @path, asset
 
   search: (name, target, exts) ->
 
@@ -84,7 +82,7 @@ class Package
     if pack = @assets[name]
       return pack
 
-    try pack = @bundle._loadPackage path.join(@path, name)
+    try pack = @bundle._loadPackage @resolve(name)
     catch err
 
       if err.code is 'NOT_PACKAGE'
@@ -95,7 +93,7 @@ class Package
         cush.emit 'warning',
           code: 'BAD_PACKAGE'
           message: err.message
-          package: path.join(@path, name)
+          package: @resolve(name)
         return null
 
     @assets[name] = pack
@@ -139,7 +137,7 @@ class Package
   _read: ->
     {name, version} = @data
     try
-      data = evalFile path.join(@path, 'package.json')
+      data = evalFile @resolve('package.json')
       if (name is data.name) and (version is data.version)
         @bundle._rebuild() if @missedPackage
         @data = data
