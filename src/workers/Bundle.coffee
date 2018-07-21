@@ -10,6 +10,7 @@ fs = require 'saxon'
 vm = require 'vm'
 
 empty = []
+VERBOSE = process.env.VERBOSE is '1'
 
 class Bundle
   constructor: (props) ->
@@ -22,8 +23,7 @@ class Bundle
     @_config = props.config
     @_extRE = null
     @_timers = {}
-    @_loadTime = elaps.lazy()
-    @_traceTime = elaps.lazy()
+    @_resetTimers()
     @_configure props
 
   relative: (filename) ->
@@ -35,9 +35,9 @@ class Bundle
     hook = (asset, pack) =>
       result = fn asset, pack
       if result and result.map
-        @_traceTime.start()
+        lap = @_timed('source maps').start()
         mapSources asset, result
-        @_traceTime.stop()
+        lap.stop()
       return
 
     hook.source = @_getSource(1)
@@ -69,23 +69,35 @@ class Bundle
 
   # Run hooks for a module.
   _loadAsset: (name, root) ->
-    t1 = @_loadTime.start()
-
     if !pack = @packages[root]
-      t2 = elaps 'load package %O', @relative(root)
+      lap = @_timed('load packages').start()
+      VERBOSE and loadTime = elaps 'load package %O', @relative(root)
+
       @packages[root] = pack =
         JSON.parse await fs.read path.join(root, 'package.json')
       pack.path = root
+
       if event = @_events.package
         await Promise.all event.hooks.map (hook) -> hook pack
-      t2.stop()
+
+      VERBOSE and loadTime.stop(true)
+      lap.stop()
+
+    if !assetExt = @_parseExt name
+      throw Error 'Unknown extension: ' + name
 
     assetPath = path.join root, name
-    t2 = elaps 'load asset %O', @relative(assetPath)
+    VERBOSE and loadTime = elaps 'load asset %O', @relative(assetPath)
+
+    lap = @_timed('read files').start()
+    content = await fs.read(assetPath)
+    lap.stop()
+
+    lap = @_timed('load assets').start()
     asset =
-      ext: @_parseExt name
+      ext: assetExt
       path: assetPath
-      content: await fs.read(assetPath)
+      content: content
       deps: null
       map: null
 
@@ -93,9 +105,9 @@ class Bundle
       ext = asset.ext
       break if !event = @_events['asset' + ext]
       for hook in event.hooks
-        lap = @_timedHook(hook).start()
+        VERBOSE and hookTime = @_timedHook(hook).start()
         await hook asset, pack
-        lap.stop()
+        VERBOSE and hookTime.stop()
         break if asset.ext != ext
 
     catch err
@@ -106,23 +118,26 @@ class Bundle
 
     if event = @_events['parse' + ext]
       for hook in event.hooks
-        lap = @_timedHook(hook).start()
+        VERBOSE and hookTime = @_timedHook(hook).start()
         await hook asset, pack
-        lap.stop()
+        VERBOSE and hookTime.stop()
 
     if event = @_events['asset']
       for hook in event.hooks
-        lap = @_timedHook(hook).start()
+        VERBOSE and hookTime = @_timedHook(hook).start()
         await hook asset, pack
-        lap.stop()
+        VERBOSE and hookTime.stop()
 
-    t2.stop()
-    t1.stop()
+    VERBOSE and loadTime.stop(true)
+    lap.stop()
 
     ext: asset.ext
     content: asset.content
     deps: asset.deps
     map: asset.map
+
+  _timed: (id) ->
+    @_timers[id] or= elaps.lazy()
 
   _timedHook: (hook) ->
     @_timers[hook.source.path] or=
@@ -132,14 +147,21 @@ class Bundle
     if /\bcush\b/.test process.env.DEBUG
       log ''
       log 'worker #' + process.env.WORKER_ID
-      @_loadTime.print 'loaded %n assets in %t'
-      @_traceTime.print 'source map tracing took %t'
-      for id, timer of @_timers
-        timer.print()
+      @_timed('read files').msg    = 'read %n files in %t'
+      @_timed('load assets').msg   = 'loaded %n assets in %t'
+      @_timed('load packages').msg = 'loaded %n packages in %t'
+      @_timed('source maps').msg   = 'source map tracing took %t'
+      timer.print() for id, timer of @_timers
 
-    @_traceTime.reset()
-    @_loadTime.reset()
-    @_timers = {}
+    @_resetTimers()
+    return
+
+  _resetTimers: ->
+    @_timers =
+      'read files': null
+      'load assets': null
+      'load packages': null
+      'source maps': null
     return
 
 require('../Bundle/PluginMixin')(Bundle)
