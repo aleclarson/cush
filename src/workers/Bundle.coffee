@@ -110,6 +110,12 @@ class Bundle
         await hook asset, pack
         lap.stop()
 
+    if event = @_events['asset']
+      for hook in event.hooks
+        lap = @_timedHook(hook).start()
+        await hook asset, pack
+        lap.stop()
+
     t2.stop()
     t1.stop()
 
