@@ -21,7 +21,7 @@ class Bundle extends Emitter
   constructor: (opts) ->
     super()
     @id = opts.id
-    @dev = opts.dev
+    @dev = Boolean opts.dev
     @root = null
     @main = null
     @target = opts.target
