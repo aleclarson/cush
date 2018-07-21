@@ -13,6 +13,8 @@ Modern module bundler 🎁
 
 [wch]: https://github.com/aleclarson/wch
 
+[**List of plugins**](https://github.com/aleclarson/cush/wiki/Plugins)
+
 **Learn more:**
 - [Configuration](./docs/config.md)
 - [Plugins](./docs/plugin.md)
