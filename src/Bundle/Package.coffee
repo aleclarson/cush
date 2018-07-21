@@ -26,6 +26,9 @@ class Package
     matchLocals data.dependencies, @skip
     matchLocals data.devDependencies, @skip
 
+  relative: (absolutePath) ->
+    absolutePath.slice @path.length + 1
+
   crawl: ->
     @crawled or= do =>
       crawl @path, @assets,
