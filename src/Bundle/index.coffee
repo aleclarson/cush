@@ -45,9 +45,6 @@ class Bundle extends Emitter
   relative: (filename) ->
     filename.slice @root.path.length + 1
 
-  load: ->
-    @_loading or= @_configure()
-
   read: ->
     @_result or= @_build()
 
@@ -163,7 +160,7 @@ class Bundle extends Emitter
     @valid = true
     @state = {}
 
-    await @load()
+    await @_loading or= @_configure()
     return null if !@valid
 
     time = process.hrtime()
