@@ -9,7 +9,6 @@ mapSources = (source, result) ->
       includeContent: false
     else result.map
 
-  source.map.generator = result.map.generator
   source.content = result.content
   return
 
