@@ -147,7 +147,9 @@ class Package
       return false
     catch err
       # Be forgiving about malformed JSON.
-      return err.name is 'SyntaxError'
+      if err.name is 'SyntaxError'
+        return true
+      throw err
 
   # Packages within a "node_modules" directory cannot be watched.
   _watch: (root = @path) ->
