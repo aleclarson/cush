@@ -10,6 +10,6 @@ require('./lib/bundles');
 require('./lib/projects');
 
 cush.formats = {
-  js: require('js-bundle'),
-  css: require('css-bundle'),
+  js: require('@cush/js-bundle'),
+  css: require('@cush/css-bundle'),
 };
