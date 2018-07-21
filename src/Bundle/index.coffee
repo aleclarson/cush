@@ -109,6 +109,11 @@ class Bundle extends Emitter
       value + '.map' or
       value.toUrl()
 
+  unload: ->
+    @_unload()
+    @_result = null
+    return
+
   destroy: ->
     @_result = Promise.resolve null
 
