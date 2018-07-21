@@ -21,6 +21,8 @@ build = (bundle, state) ->
   t2 = elaps.lazy 'resolve dependencies'
 
   assetHook = bundle.hook 'asset'
+  ownerHook = bundle.hook 'package'
+
   loadAsset = (asset) ->
     return if loaded[asset.id]
     loaded[asset.id] = true
@@ -31,6 +33,7 @@ build = (bundle, state) ->
       packages.push owner
       owner.missedAsset = false
       owner.missedPackage = false
+      ownerHook.emit owner, state
 
     # Wait for the load queue to be cleared.
     await resolved
