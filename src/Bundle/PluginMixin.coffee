@@ -45,9 +45,21 @@ mixin =
     return this
 
   merge: (path, val) ->
-    obj = @get path, new val.constructor()
-    if obj.constructor == val.constructor
+    if arguments.length is 2
+      if typeof path == 'string'
+        path = path.split '.'
+      obj = @get path
+    else
+      obj = @_config
+      val = path
+
+    if obj and obj.constructor == val.constructor
       merge obj, val
+    else if arguments.length is 2
+      obj = @get path.slice(0, -1), {}
+      obj[path[path.length - 1]] = val
+    else
+      throw TypeError 'Cannot merge that value: ' + (JSON.stringify(value) or Object::toString.call value)
     return this
 
   hook: (id, hook) ->
