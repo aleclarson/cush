@@ -198,6 +198,9 @@ class Package
         if isObject asset
           @bundle._rebuild()
 
+          if asset is @main
+            @main = null
+
           if evt.exists
             asset.time = Date.now()
             return asset._unload()
