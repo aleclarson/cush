@@ -45,6 +45,9 @@ class Bundle extends Emitter
   relative: (filename) ->
     filename.slice @root.path.length + 1
 
+  resolve: (relativePath) ->
+    path.resolve @root.path, relativePath
+
   read: ->
     @_result or= @_build()
 
