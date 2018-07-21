@@ -127,9 +127,7 @@ class Bundle extends Emitter
     @project.drop this
     @project = null
 
-    delete cush.bundles[@id]
     dropBundle this
-
     @emitAsync 'destroy'
     return
 

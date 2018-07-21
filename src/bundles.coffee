@@ -8,9 +8,6 @@ builtinParsers = [
   require.resolve('./parsers/css')
 ]
 
-# Bundle cache
-cush.bundles = Object.create null
-
 # Bundle constructor
 cush.bundle = (main, opts) ->
 
@@ -27,9 +24,6 @@ cush.bundle = (main, opts) ->
     id = sha256(main, 10) + '.' + opts.target
     id += '.dev' if opts.dev
     opts.id = id
-
-  if bundle = cush.bundles[id]
-    return bundle
 
   # Find the main module.
   file = main.slice(0, -ext.length) + '.' + opts.target + ext
@@ -63,8 +57,6 @@ cush.bundle = (main, opts) ->
   project = cush.project root
   project.bundles.add bundle
   bundle.project = project.watch()
-
-  cush.bundles[id] = bundle
   return bundle
 
 #
