@@ -186,8 +186,7 @@ class Package
           return asset._unload()
 
       else
-        evt.pack = this
-        @bundle.emitAsync 'change', evt
+        @bundle.emitAsync 'change', evt, this
 
         if evt.new
           @assets[evt.name] = true
