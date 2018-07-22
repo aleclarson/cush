@@ -1,8 +1,3 @@
-const fs = require('fs');
-try {
-  fs.symlinkSync('..', 'node_modules/cush');
-} catch(e) {}
-
 const cush = require('./lib/index');
 module.exports = cush;
 

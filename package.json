@@ -5,12 +5,15 @@
   "description": "Modern module bundler",
   "repository": "https://github.com/aleclarson/cush.git",
   "scripts": {
-    "build": "coffee-build src -o lib"
+    "build": "coffee-build src -o lib",
+    "postinstall": "node ./postinstall"
   },
   "engines": {
     "node": ">=9"
   },
   "files": [
+    "index.js",
+    "postinstall.js",
     "lib",
     "utils"
   ],
