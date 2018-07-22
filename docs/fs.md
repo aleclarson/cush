@@ -12,7 +12,6 @@ Available options are:
 - `dev: ?boolean`
 - `target: string`
 - `plugins: ?(string|Function|Object)[]`
-- `parsers: ?string[]`
 - `format: ?Function`
 
 The `dev` option is used by plugins and formats. Your `cush.config.js` module may even use it. The default value is `false`, which indicates a "production" bundle should be generated.
@@ -20,8 +19,6 @@ The `dev` option is used by plugins and formats. Your `cush.config.js` module ma
 The `target` is required. Common values are `web`, `ios`, and `android`.
 
 The `plugins` option is identical to calling `Bundle#use` with the same value. [Learn more](./plugins.md#using-a-plugin)
-
-The `parsers` option is an array of filenames that are imported in all workers. [Learn more](./workers.md#parseextasset-asset-pack-object)
 
 The `format` option is explained on [this page.](./formats.md)
 
@@ -69,19 +66,21 @@ The array of plugins that you passed to `cush.bundle`.
 
 If you mutate this after calling `read` at least once, you must call `unload` to reset the bundle.
 
-#### `parsers: string[]`
-
-The array of parsers that you passed to `cush.bundle`.
-
-If you mutate this after calling `read` at least once, you must call `unload` to reset the bundle.
-
 #### `project: Project`
 
 The project that owns this bundle.
 
-#### `valid: boolean`
+#### `status: number`
 
-Equals `false` if a new build is required on the next read.
+The bundle status:
+```js
+INIT = 1  // never built before
+LAZY = 2  // no automatic rebuilds
+IDLE = 3  // waiting for changes
+REDO = 4  // scheduled to rebuild
+BUSY = 5  // build in progress
+DONE = 6  // build complete
+```
 
 #### `state: Object`
 
@@ -155,13 +154,35 @@ Once this is called, you'll need to use `cush.bundle` if you need the same bundl
 
 You *must* call this to properly clean up the worker farm and stop any file watchers.
 
+### Events
+
+Events are *not* hooks. Your listeners won't be removed when the bundle is reconfigured, and you add listeners with the `on` method. [Learn more](https://github.com/cushJS/events) about event-related methods.
+
+#### `async change(event: Object, pack: Package)`
+
+A package watched by the bundle had an asset added, changed, or deleted.
+
+#### `async invalidate()`
+
+The last build is now outdated.
+
+#### `rebuild()`
+
+The next build is starting.
+
+At risk of stating the obvious, the first build does *not* trigger this event.
+
+#### `async destroy()`
+
+The bundle had its [`destroy`](#destroy-void) method called.
+
 ### Hooks
 
 Here are hooks provided by the bundler by default. Remember that plugins and bundle formats can provide their own hooks, so read their documentation too.
 
 #### `asset(asset: Asset, state: Object)`
 
-Called on every build for every asset used by the bundle. The asset may have been in the previous build or entirely new. The `state` object is equivalent to `asset.owner.bundle.state`, which is reset at the start of every build.
+Called on every build for every asset used by the bundle. The asset may have been in the previous build or entirely new. The `state` object is reset at the start of every build.
 
 #### `package(pack: Package, state: Object)`
 

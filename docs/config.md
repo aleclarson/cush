@@ -2,15 +2,24 @@
 
 This document describes the `cush.config.js` module, which is used to configure the bundles of a project.
 
+Most changes to the `cush.config.js` module take effect immediately.
+
 ## `bundles` object
 
 The `bundles` object defines options for bundles. 
 
 Each key is the path to a bundle's main module (relative to the project root).
 
-Each value is an [options][opts] object.
+Each value is an object with these properties:
+- `format: ?Function`
+- `plugins: ?(string|Function|Object)[]`
+- `init: ?Function`
 
-[opts]: ./fs.md#creating-a-bundle
+The `format` option forces the given bundle format to be used. You must recreate the bundle for changes to this option to take effect.
+
+The `plugins` option has values explained [here.](./plugins.md#using-a-plugin)
+
+The `init` option is called whenever the bundle is being configured.
 
 ```js
 exports.bundles = {
