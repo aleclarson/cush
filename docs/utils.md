@@ -4,7 +4,7 @@ This document describes utility functions provided by `cush/utils`.
 
 🚧 *Under construction*
 
-## ErrorTracer
+### ErrorTracer
 
 The `ErrorTracer` function takes two arguments:
 - `sources: Source|Array<Source>` where `Source = {content: string, map: Object}`

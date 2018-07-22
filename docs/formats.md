@@ -41,17 +41,17 @@ Custom formats must export a class that extends the `cush.Bundle` class.
 
 ### Class Properties
 
-### `id: string`
+#### `id: string`
 
 Your format's unique identifier (short, camel case, and first letter lowercase).
 
-### `exts: ?string[]`
+#### `exts: ?string[]`
 
 Extensions used to resolve a dependency when no extension exists in a file reference. Also used to resolve the format of a bundle when no format is explicitly defined.
 
 *Note:* Values must start with a period.
 
-### `plugins: ?(string|Function|Object)[]`
+#### `plugins: ?(string|Function|Object)[]`
 
 The list of default plugins, used by every bundle of this format.
 
@@ -63,7 +63,7 @@ These plugins run before any user-defined plugins by default.
 
 ### Methods
 
-### `async _concat(assets: Asset[], packages: Package[]): string`
+#### `async _concat(assets: Asset[], packages: Package[]): string`
 
 Returns the string of concatenated assets.
 
@@ -71,13 +71,13 @@ The `assets` and `packages` array are in order of appearance.
 
 **Must override this.**
 
-### `_wrapSourceMapURL(url: string): string`
+#### `_wrapSourceMapURL(url: string): string`
 
 Returns the `sourceMappingURL=` comment appended to the result of `_concat`.
 
 **Must override this.**
 
-### `_getInitialConfig(): Object`
+#### `_getInitialConfig(): Object`
 
 Create the initial `_config` object (used by `get`, `set`, and `merge`).
 
@@ -85,7 +85,7 @@ This is called before any plugins are loaded.
 
 *Note:* Always call `super` in this method.
 
-### `_onConfigure(): void`
+#### `_onConfigure(): void`
 
 Do whatever after all plugins have been loaded.
 

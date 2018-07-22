@@ -12,23 +12,23 @@ Bundles in a worker context use a different class than the main process.
 
 ### Properties
 
-### `id: string`
+#### `id: string`
 
 The bundle identifier.
 
-### `dev: boolean`
+#### `dev: boolean`
 
 Equals `true` if in development mode.
 
-### `root: string`
+#### `root: string`
 
 The absolute path to the bundle's root directory.
 
-### `target: string`
+#### `target: string`
 
 The target platform.
 
-### `packages: Object`
+#### `packages: Object`
 
 When multiple workers exist, this won't contain all packages used by the bundle, because packages are secluded to a single worker.
 
@@ -40,11 +40,11 @@ When multiple workers exist, this won't contain all packages used by the bundle,
 
 These methods are also available:
 
-### `relative(path: string): string`
+#### `relative(path: string): string`
 
 Returns the path relative to `this.root`.
 
-### `transform(exts: string|string[], fn: Function): void`
+#### `transform(exts: string|string[], fn: Function): void`
 
 Hook into one or many `asset.[ext]` events.
 
@@ -52,13 +52,13 @@ Hook into one or many `asset.[ext]` events.
 
 ### Hooks
 
-### `package(pack: Object)`
+#### `package(pack: Object)`
 
 Called when a package is first used. Perfect time for plugins to do package-specific initialization.
 
 Hooks are run in parallel and can be asynchronous.
 
-### `asset.[ext](asset: Asset, pack: Object)`
+#### `asset.[ext](asset: Asset, pack: Object)`
 
 Called after the `package` hook. Perfect time for plugins to transform an asset.
 
@@ -70,7 +70,7 @@ Hook errors halt any further loading of the asset.
 
 Hooks may change the `ext` of the asset, which will skip any remaining hooks of the same extension.
 
-### `parse.[ext](asset: Asset, pack: Object)`
+#### `parse.[ext](asset: Asset, pack: Object)`
 
 Called after all `asset.[ext]` hooks. Perfect time for plugins to parse dependencies.
 
@@ -78,7 +78,7 @@ Hooks are run in order and can be asynchronous.
 
 At this point, the asset is in its final form.
 
-### `asset(asset: Asset, pack: Object)`
+#### `asset(asset: Asset, pack: Object)`
 
 Called after all `parse.[ext]` hooks.
 
@@ -104,25 +104,25 @@ Assets only exist while being loaded and should never be cached by plugins.
 
 ### Properties
 
-### `path: string`
+#### `path: string`
 
 The absolute file path.
 
-### `ext: string`
+#### `ext: string`
 
 The file extension. May be mutated by plugins.
 
-### `content: string`
+#### `content: string`
 
 The current file content. Not guaranteed to be the actual file content, because plugins are allowed to mutate this property. Changes to this property are *not* persisted to disk.
 
-### `deps: ?Object[]`
+#### `deps: ?Object[]`
 
 The parsed dependencies. Always equals `null` until after the `parse` hooks are triggered, which occurs after the `asset` hooks. Even then, this property may still equal `null` if no parser is found.
 
 The values are `{ref, start, end, asset}` objects.
 
-### `map: ?Object`
+#### `map: ?Object`
 
 The current source map. Plugins are allowed to mutate this property.
 

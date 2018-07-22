@@ -50,7 +50,7 @@ These methods are for accessing and mutating bundle configuration.
 
 The `key` argument can use dot-notation.
 
-### `get(key: string): ?any`
+#### `get(key: string): ?any`
 
 Get a value from the config object.
 
@@ -58,13 +58,13 @@ Returns `undefined` when the key does not exist.
 
 Throws if the key tries to access a defined non-object.
 
-### `set(key: string, value: any): this`
+#### `set(key: string, value: any): this`
 
 Set a property in the config object.
 
 Throws if the key tries to mutate a defined non-object.
 
-### `merge(key: string, values: Object|Array): this`
+#### `merge(key: string, values: Object|Array): this`
 
 Merge `values` into a property.
 
@@ -72,6 +72,6 @@ When the existing value is not the same type as the given `values`, it is overwr
 
 Otherwise, the given `values` are merged into the existing value. When `values` is an array, it's concatenated to the end of the existing array. When `values` is an object, it's deeply merged into the existing object.
 
-### `merge(values: Object): this`
+#### `merge(values: Object): this`
 
 Deeply merge `values` into the top-level config.

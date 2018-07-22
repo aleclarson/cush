@@ -8,19 +8,19 @@ The following methods are always available on bundles (even in workers).
 
 [Learn](./workers.md#hooks) about hooks available in workers only.
 
-### `hook(id: string, fn: Function): this`
+#### `hook(id: string, fn: Function): this`
 
 Hook into an event.
 
 Your function is called after all existing hooks, unless they were added with `hookRight`.
 
-### `hookLeft(id: string, fn: Function): this`
+#### `hookLeft(id: string, fn: Function): this`
 
 Hook into an event.
 
 Your function is called before all existing hooks.
 
-### `hookRight(id: string, fn: Function): this`
+#### `hookRight(id: string, fn: Function): this`
 
 Hook into an event.
 
