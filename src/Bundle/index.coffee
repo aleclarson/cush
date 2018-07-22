@@ -1,4 +1,4 @@
-{evalFile, extRegex, getCallSite, getModule, uhoh} = require '../utils'
+{each, evalFile, extRegex, getCallSite, getModule, uhoh} = require '../utils'
 {loadBundle, dropBundle} = require '../workers'
 isObject = require 'is-object'
 Emitter = require '@cush/events'
@@ -206,13 +206,13 @@ class Bundle extends Emitter
         .then @_build.bind this
 
   _unload: ->
-    @_invalidate() if @valid
+    dropBundle this
 
     # Reset the main module.
     @main.content = null
     @main.deps = null
 
-    # Reset the asset cache.
+    # Clear the asset cache.
     @assets = [, @main]
     @_nextAssetId = 2
 
@@ -222,7 +222,13 @@ class Bundle extends Emitter
     @root.assets[@main.name] = @main
     @root.users = new Set
 
-    # Reset the package cache.
+    # Unwatch all packages (except the project root).
+    each @packages, (pack) =>
+      if pack isnt @root
+        pack.watcher?.destroy()
+      return
+
+    # Clear the package cache.
     @packages = Object.create null
     @packages[@root.data.name] =
       new Map [[@root.data.version, @root]]
