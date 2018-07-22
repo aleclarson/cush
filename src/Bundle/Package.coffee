@@ -5,9 +5,12 @@ cush = require 'cush'
 path = require 'path'
 wch = require 'wch'
 
+nodeModuleGlobs = ['/node_modules/*', '/node_modules/@*/*']
+nodeModuleGlobs.forEach (glob) ->
+  nodeModuleGlobs.push glob + '/package.json'
+
 nodeModulesExpr = wch.expr
-  only: ['/node_modules/*/package.json', '/node_modules/@*/*/package.json']
-  type: 'f'
+  only: nodeModuleGlobs
 
 class Package
   constructor: (@path, data) ->
@@ -169,8 +172,10 @@ class Package
           @bundle._rebuild() if @missedPackage
           return
 
+        if /\.json$/.test evt.name
+          evt.name = path.dirname evt.name
+
         # Skip unused packages.
-        evt.name = path.dirname evt.name
         return if !asset = @assets[evt.name]
 
         # Skip packages with unchanged name/version.
