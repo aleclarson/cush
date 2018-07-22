@@ -1,1 +1,0 @@
-coffee.compile('src', 'lib')
