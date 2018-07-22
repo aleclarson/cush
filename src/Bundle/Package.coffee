@@ -183,7 +183,9 @@ class Package
 
         # Unload the package if we own it.
         if this is asset.owner
-          return asset._unload()
+          asset._unload()
+          @bundle._invalidate()
+          return
 
       else
         @bundle.emitAsync 'change', evt, this
