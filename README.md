@@ -1,4 +1,4 @@
-# cush v0.2.0
+# cush v0.2.1
 
 Modern module bundler 🎁
 
