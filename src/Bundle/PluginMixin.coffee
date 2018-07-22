@@ -56,8 +56,7 @@ mixin =
     if obj and obj.constructor == val.constructor
       merge obj, val
     else if arguments.length is 2
-      obj = @get path.slice(0, -1), {}
-      obj[path[path.length - 1]] = val
+      setPath @_config, path, val
     else
       throw TypeError 'Cannot merge that value: ' + (JSON.stringify(value) or Object::toString.call value)
     return this
