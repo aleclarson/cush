@@ -65,7 +65,6 @@ module.exports =
       target: bundle.target
       config: bundle._config
       plugins: bundle._workers
-      parsers: bundle.parsers
     }]
 
   loadAsset: (asset) ->

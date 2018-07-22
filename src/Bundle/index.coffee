@@ -15,6 +15,9 @@ empty = []
 resolved = Promise.resolve null
 nodeModulesRE = /\/node_modules\//
 
+jsParser = require.resolve '../parsers/js'
+cssParser = require.resolve '../parsers/css'
+
 INIT = 1  # never built before
 LAZY = 2  # no automatic rebuilds
 IDLE = 3  # waiting for changes
@@ -37,12 +40,10 @@ class Bundle extends Emitter
     @assets = []
     @packages = Object.create null
     @plugins = opts.plugins or []
-    @parsers = opts.parsers or []
     @project = null
     @status = INIT
     @state = null
     @time = 0
-    @_init = opts.init
     @_extRE = null
     @_config = null
     @_events = null
@@ -156,12 +157,18 @@ class Bundle extends Emitter
     @_config = @_getInitialConfig()
     @_events = events = {}
 
-    if @_init
-      try await @_init()
-      catch err
-        log.error err
+    # Add the built-in parsers.
+    @merge 'parsers', [jsParser, cssParser]
 
-    await @_callPlugins()
+    # Call format-provided plugins.
+    if @constructor.plugins
+      await @use @constructor.plugins
+
+    # Call plugins provided during creation.
+    if @plugins.length
+      await @use @plugins
+
+    # Apply `cush.config.js` configuration.
     await @project._configure(this)
 
     if events.config
@@ -171,10 +178,6 @@ class Bundle extends Emitter
     @_onConfigure()
     loadBundle this
     return this
-
-  _callPlugins: ->
-    if @plugins.length
-      return @use @plugins
 
   _build: ->
     if @status isnt INIT

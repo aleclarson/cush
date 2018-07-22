@@ -49,7 +49,7 @@ class Bundle
 
   _configure: ({plugins, parsers}) ->
 
-    parsers.forEach (filename) =>
+    @_config.parsers.forEach (filename) =>
       for ext, parse of require(filename)
         parse.source = {path: filename}
         @hook 'parse' + ext, parse

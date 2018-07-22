@@ -3,11 +3,6 @@ cush = require 'cush'
 path = require 'path'
 fs = require 'saxon/sync'
 
-builtinParsers = [
-  require.resolve('./parsers/js')
-  require.resolve('./parsers/css')
-]
-
 # Bundle constructor
 cush.bundle = (main, opts) ->
 
@@ -36,9 +31,7 @@ cush.bundle = (main, opts) ->
 
   # Load the project.
   project = cush.project root
-  if bundles = project.config.bundles
-    defaults = merge {}, bundles[path.relative root, main]
-    opts = merge defaults, opts
+  opts.format or= project.get(main).format
 
   # Resolve the bundle format.
   if !Bundle = opts.format or resolveFormat main
@@ -46,9 +39,6 @@ cush.bundle = (main, opts) ->
 
   # Create the bundle.
   bundle = new Bundle opts
-  if Bundle.plugins
-    bundle.plugins.unshift ...Bundle.plugins
-  bundle.parsers.push ...builtinParsers
 
   # Load the root package.
   pack = bundle._loadPackage root

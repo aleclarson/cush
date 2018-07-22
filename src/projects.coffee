@@ -20,6 +20,13 @@ class Project extends Emitter
     @watcher = null
     @bundles = new Set
 
+  get: (main) ->
+    if bundles = @config.bundles
+      if !path.isAbsolute main
+        main = path.relative @root, main
+      return bundles[main] or {}
+    return {}
+
   watch: ->
     @watcher or=
       wch.stream @root,
@@ -43,8 +50,23 @@ class Project extends Emitter
       @watcher.destroy()
       delete projects[@root.path]
 
-  # Format-specific configuration
   _configure: (bundle) ->
+
+    # Bundle-specific configuration
+    if config = @config.bundles?[bundle.main.name]
+
+      if typeof config.init is 'function'
+        try await config.init.call bundle
+        catch err
+          log.error err
+
+      if Array.isArray config.parsers
+        bundle.merge 'parsers', config.parsers
+
+      if Array.isArray config.plugins
+        await bundle.use config.plugins
+
+    # Format-specific configuration
     if fn = @config[bundle.constructor.id]
       try await fn.call bundle
       catch err
