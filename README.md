@@ -13,14 +13,16 @@ Modern module bundler 🎁
 
 [wch]: https://github.com/aleclarson/wch
 
-[**List of plugins**](https://github.com/aleclarson/cush/wiki/Plugins)
+### [List of plugins](https://github.com/aleclarson/cush/wiki/Plugins)
 
-**Learn more:**
+### Learn more
 - [Configuration](./docs/config.md)
-- [Plugins](./docs/plugin.md)
 - [Bundling](./docs/bundling.md)
-- [Formats](./docs/format.md)
-- [Filesystem](./docs/fs.md)
+- [Formats](./docs/formats.md)
+- [Plugins](./docs/plugins.md)
+- [Workers](./docs/workers.md)
+- [Classes](./docs/fs.md)
+- [Hooks](./docs/hooks.md)
 
 &nbsp;
 
