@@ -86,10 +86,14 @@ build = (bundle, state) ->
   each bundle.packages, (versions, name) ->
     versions.forEach dropUnusedPackage
 
+  concatTimer = elaps 'concatenated %O assets in %t', assets.length
+
   # Concatenate the assets.
-  t3 = elaps 'concatenate assets'
   result = await bundle._concat assets, packages
-  t3.stop()
+
+  if /\bcush\b/.test process.env.DEBUG
+    setImmediate -> concatTimer.stop true
+
   return result
 
 module.exports = build

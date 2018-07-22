@@ -12,6 +12,8 @@ vm = require 'vm'
 empty = []
 VERBOSE = process.env.VERBOSE is '1'
 
+elaps.log = log
+
 class Bundle
   constructor: (props) ->
     @id = props.id
