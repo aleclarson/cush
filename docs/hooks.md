@@ -2,11 +2,10 @@
 
 "Hooks" are functions that listen to a `BundleEvent` object.
 
+- [**Hooks not available to workers**](./fs.md#hooks)
+- [**Hooks only available to workers**](./workers.md#hooks)
+
 The following methods are always available on bundles (even in workers).
-
-[Learn](./fs.md#hooks) about hooks available in main process only.
-
-[Learn](./workers.md#hooks) about hooks available in workers only.
 
 #### `hook(id: string, fn: Function): this`
 
