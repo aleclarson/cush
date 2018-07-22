@@ -179,11 +179,11 @@ class Package
         return if !asset = @assets[evt.name]
 
         # Skip packages with unchanged name/version.
-        return if evt.exists and dep._read()
+        return if evt.exists and asset._read()
 
         # Unload the package if we own it.
-        if this is dep.owner
-          return dep._unload()
+        if this is asset.owner
+          return asset._unload()
 
       else
         evt.pack = this
