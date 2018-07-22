@@ -73,9 +73,11 @@ module.exports =
     worker.request ['loadAsset', asset.name, pack.path, pack.bundle.id]
 
   dropPackage: (pack) ->
-    pack.worker.send ['dropPackage', pack.path, pack.bundle.id]
-    pack.worker.packCount -= 1
-    pack.worker = null
+    if worker = pack.worker
+      worker.send ['dropPackage', pack.path, pack.bundle.id]
+      worker.packCount -= 1
+      pack.worker = null
+      return
 
   dropBundle: (bundle) ->
     broadcast ['dropBundle', bundle.id]
