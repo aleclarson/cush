@@ -7,8 +7,6 @@ cush = require 'cush'
 resolved = Promise.resolve()
 
 build = (bundle, state) ->
-  timestamp = Date.now()
-
   assets = []    # ordered assets
   loaded = []    # sparse asset map for deduping
   packages = []  # ordered packages
@@ -59,21 +57,21 @@ build = (bundle, state) ->
   # Load the main module.
   await loadAsset bundle.main
 
+  {IDLE, BUSY} = require('../Bundle').Status
+
   # Keep loading modules until stopped or finished.
-  while bundle.valid and queue.length
+  while bundle.status == BUSY and queue.length
     await mapFlush queue, loadAsset
 
-  # The bundle is invalid if dependencies are missing.
-  if missing.length
-    state.missing = missing
-    bundle._invalidate()
-
-  # Exit early for invalid bundles.
-  if !bundle.valid
+  # Exit early for cancelled builds.
+  if bundle.status != BUSY
     return null
 
-  # Update the build time.
-  bundle.time = timestamp
+  # Cancel the build if dependencies are missing.
+  if missing.length
+    state.missing = missing
+    bundle.status = IDLE
+    return null
 
   readTimer.print 'loaded %n assets in %t'
   resolveTimer.print 'resolved %O dependencies in %t', resolvedCount

@@ -142,7 +142,7 @@ class Package
     try
       data = evalFile @resolve('package.json')
       if (name is data.name) and (version is data.version)
-        @bundle._rebuild() if @missedPackage
+        @bundle._invalidate() if @missedPackage
         @data = data
         return true
       return false
@@ -169,7 +169,7 @@ class Package
       if /^node_modules\//.test evt.name
         # Skip new packages.
         if evt.new
-          @bundle._rebuild() if @missedPackage
+          @bundle._invalidate() if @missedPackage
           return
 
         if /\.json$/.test evt.name
@@ -190,7 +190,7 @@ class Package
 
         if evt.new
           @assets[evt.name] = true
-          @bundle._rebuild() if @missedAsset
+          @bundle._invalidate() if @missedAsset
           return
 
         # Packages without a parent must reload their own data.
@@ -198,7 +198,7 @@ class Package
 
         asset = @assets[evt.name]
         if isObject asset
-          @bundle._rebuild()
+          @bundle._invalidate()
 
           if asset is @main
             @main = null

@@ -12,11 +12,20 @@ log = require('lodge').debug('cush')
 fs = require 'saxon/sync'
 
 empty = []
+resolved = Promise.resolve null
 nodeModulesRE = /\/node_modules\//
+
+INIT = 1  # never built before
+LAZY = 2  # no automatic rebuilds
+IDLE = 3  # waiting for changes
+REDO = 4  # scheduled to rebuild
+BUSY = 5  # build in progress
+DONE = 6  # build complete
 
 class Bundle extends Emitter
   @Asset: Asset
   @Package: Package
+  @Status: {INIT, LAZY, IDLE, REDO, BUSY, DONE}
 
   constructor: (opts) ->
     super()
@@ -30,18 +39,18 @@ class Bundle extends Emitter
     @plugins = opts.plugins or []
     @parsers = opts.parsers or []
     @project = null
-    @valid = false
+    @status = INIT
     @state = null
     @time = 0
-    @_result = null
+    @_init = opts.init
+    @_extRE = null
+    @_config = null
+    @_events = null
+    @_workers = []
     @_loading = null
     @_loadedPlugins = new Set
     @_nextAssetId = 1
-    @_workers = []
-    @_config = null
-    @_events = null
-    @_extRE = null
-    @_init = opts.init
+    @_result = null
 
   relative: (absolutePath) ->
     absolutePath.slice @root.path.length + 1
@@ -50,7 +59,11 @@ class Bundle extends Emitter
     path.resolve @root.path, relativePath
 
   read: ->
-    @_result or= @_build()
+    if @status <= IDLE
+      if @_result is null
+      then @_result = @_build()
+      else @_result = @_result.then @_build.bind this
+    else @_result
 
   use: (plugins) ->
     if !Array.isArray plugins
@@ -111,25 +124,20 @@ class Bundle extends Emitter
       arg.toUrl()
 
   unload: ->
-    @_unload()
-    @_result = null
+    @status = LAZY
+    if @status > IDLE
+    then @_result.then @_unload.bind this
+    else @_unload()
     return
 
   destroy: ->
-    @_result = Promise.resolve null
-
-    @main = null
-    @assets = null
-
-    @packages.forEach (pack) ->
-      pack.watcher?.destroy()
-    @packages = null
+    @emitAsync 'destroy'
 
     @project.drop this
     @project = null
 
-    dropBundle this
-    @emitAsync 'destroy'
+    @unload()
+    @_result = resolved
     return
 
   _parseExt: (name) ->
@@ -168,42 +176,42 @@ class Bundle extends Emitter
     if @plugins.length
       return @use @plugins
 
-  _build: -> try
-    @valid = true
+  _build: ->
+    if @status isnt INIT
+      @emitSync 'rebuild'
+
     @state = {}
+    @status = BUSY
+    try
+      await @_loading or= @_configure()
+      return null if @status isnt BUSY
 
-    await @_loading or= @_configure()
-    return null if !@valid
+      time = Date.now()
+      bundle = await build this, @state
+      return null if @status isnt BUSY
 
-    time = process.hrtime()
-    bundle = await build this, @state
-    return null if !@valid
+      @time = time
+      @status = DONE
+      return bundle
 
-    time = process.hrtime time
-    @state.elapsed = Math.ceil time[0] * 1e3 + time[1] * 1e-6
-    return bundle
+    catch err
+      return null if @status isnt BUSY
 
-  catch err
-    # Errors are ignored when the next build is automatic.
-    if @valid
-      @_result = null
-      @_invalidate()
+      @status = LAZY
+      @_result = resolved
       throw err
 
-  # Invalidate the current build, and disable automatic rebuilds
-  # until the next build is triggered manually.
-  _invalidate: ->
-    @valid = false
-    @emitAsync 'invalidate'
-    return
-
   # Schedule an automatic rebuild.
-  _rebuild: ->
-    if @_result
-      @_invalidate() if @valid
+  _invalidate: (reload) ->
+    if @status > REDO or @status == IDLE
+      @status = REDO
+      @emitAsync 'invalidate'
       @_result = @_result
-        .then noEarlier 200 + Date.now()
-        .then @_build.bind this
+        .then noEarlier Date.now() + 100
+        .then =>
+          @_unload() if reload
+          @_build()
+      return
 
   _unload: ->
     dropBundle this
@@ -283,9 +291,10 @@ module.exports = Bundle
 
 # Create a function that enforces a minimum delay.
 noEarlier = (time) ->
-  return -> new Promise (resolve) ->
-    delay = Math.max 0, time - Date.now()
-    delay and setTimeout(resolve, delay) or resolve()
+  return -> wait time - Date.now()
+
+wait = (ms) -> new Promise (resolve) ->
+  if ms > 0 then setTimeout(resolve, ms) else resolve()
 
 resolvePlugin = (name, main) ->
   if name.indexOf('cush-') is -1

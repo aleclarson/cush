@@ -27,8 +27,7 @@ class Project extends Emitter
       .on 'data', (evt) =>
         @config = evalFile(evt.path) or {}
         @bundles.forEach (bundle) ->
-          bundle._unload()
-          bundle._rebuild()
+          bundle._invalidate true
         @emit 'config'
     return this
 
