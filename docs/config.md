@@ -1,6 +1,6 @@
 # cush.config.js
 
-This document describes the `cush.config.js` module.
+This document describes the `cush.config.js` module, which is used to configure the bundles of a project.
 
 ## `bundles` object
 
@@ -10,7 +10,7 @@ Each key is the path to a bundle's main module (relative to the project root).
 
 Each value is an [options][opts] object.
 
-[opts]: ./bundle.md#options
+[opts]: ./fs.md#creating-a-bundle
 
 ```js
 exports.bundles = {

@@ -21,7 +21,7 @@ The `target` is required. Common values are `web`, `ios`, and `android`.
 
 The `plugins` option is identical to calling `Bundle#use` with the same value. [Learn more](./plugins.md#using-a-plugin)
 
-The `parsers` option is an array of filenames that are imported in all workers. [Learn more](./workers.md#hooks-parse)
+The `parsers` option is an array of filenames that are imported in all workers. [Learn more](./workers.md#parseextasset-asset-pack-object)
 
 The `format` option is explained on [this page.](./formats.md)
 
@@ -99,7 +99,7 @@ The timestamp of when the last (successful) build started.
 
 ### Methods
 
-[Config methods](./config.md#config-methods) and [hook methods](#./hooks.md) are available.
+[Config methods](./config.md#config-methods) and [hook methods](./hooks.md) are available.
 
 These methods are also available:
 
@@ -154,6 +154,18 @@ Destroy the bundle when it isn't needed anymore.
 Once this is called, you'll need to use `cush.bundle` if you need the same bundle in the future.
 
 You *must* call this to properly clean up the worker farm and stop any file watchers.
+
+### Hooks
+
+Here are hooks provided by the bundler by default. Remember that plugins and bundle formats can provide their own hooks, so read their documentation too.
+
+### `asset(asset: Asset, state: Object)`
+
+Called on every build for every asset used by the bundle. The asset may have been in the previous build or entirely new. The `state` object is equivalent to `asset.owner.bundle.state`, which is reset at the start of every build.
+
+### `package(pack: Package, state: Object)`
+
+The same as the `asset` hook, but for packages. This hook is called before the `asset` hook when an asset new to the bundle is owned by a package new to the bundle.
 
 &nbsp;
 
