@@ -1,5 +1,8 @@
-_TODO.md
+/.npmignore
+/_TODO.md
+/coffeelint.json
+/docs/
 /formats/
 /plugins/
-/node_modules/
-/lib/
+/src/
+/wch.config.js
