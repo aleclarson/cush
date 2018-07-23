@@ -4,6 +4,7 @@ isObject = require 'is-object'
 cush = require 'cush'
 path = require 'path'
 wch = require 'wch'
+fs = require 'saxon/sync'
 
 nodeModuleGlobs = ['/node_modules/*', '/node_modules/@*/*']
 nodeModuleGlobs.forEach (glob) ->
