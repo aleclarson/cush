@@ -6,7 +6,7 @@ Most changes to the `cush.config.js` module take effect immediately.
 
 ## `bundles` object
 
-The `bundles` object defines options for bundles. 
+The `bundles` object defines options for bundles.
 
 Each key is the path to a bundle's main module (relative to the project root).
 
@@ -24,7 +24,7 @@ The `init` option is called whenever the bundle is being configured.
 ```js
 exports.bundles = {
   'src/index.js': {
-    format: require('foo-bundle'),
+    format: require('@cush/js-bundle'),
     plugins: [],
     init() {
       console.log(this); // [object Bundle]
@@ -38,7 +38,7 @@ exports.bundles = {
 You can customize bundles that use a specific [bundle format](./formats.md).
 
 ```js
-const JSBundle = require('js-bundle');
+const JSBundle = require('@cush/js-bundle');
 
 exports[JSBundle.id] = function() {
   console.log(this); // [object Bundle]
