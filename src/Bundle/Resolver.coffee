@@ -19,7 +19,7 @@ Resolver = (bundle, resolved, missing) ->
       if id is null
         cush.emit 'warning',
           message: 'Unsupported import path: ' + ref
-          parent: bundle.relative parent
+          parent: bundle.relative parent.path()
         return false
 
       if id is ''
@@ -46,7 +46,7 @@ Resolver = (bundle, resolved, missing) ->
     else # absolute paths are forbidden 💥
       cush.emit 'warning',
         message: 'Import path must be relative'
-        parent: bundle.relative parent
+        parent: bundle.relative parent.path()
       return false
 
     pack or= owner
