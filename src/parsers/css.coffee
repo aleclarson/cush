@@ -1,7 +1,5 @@
 cssTokenize = require 'postcss/lib/tokenize'
 
-skipRE = /^(;|comment|space)$/
-
 exports['.css'] = (asset, pack) ->
   return if asset.deps
 
@@ -10,23 +8,39 @@ exports['.css'] = (asset, pack) ->
     css: asset.content
     error: onError
 
+  # Default to working with postcss-scss
+  toks.atrule or= 'at-word'
+  toks.comment or= 'comment'
+  toks.evalStrings ?= true
+  toks.importWord or= '@import'
+  toks.semi ?= true
+  toks.space or= 'space'
+
+  # Customizable helpers
+  toks.getLength or= (prev) -> prev[1].length
+  toks.isAtrule or= (curr) -> curr[0] is toks.atrule
+  toks.isImport or= (curr) -> curr[1] is toks.importWord
+
   offset = 0
   prev = null
   curr = null
   next = ->
     if prev = curr
-      offset += prev[1].length
+      offset += toks.getLength prev
     curr = toks.nextToken()
+    return curr
 
   deps = []
   while next()
-    continue if skipRE.test curr[0]
-    break if curr[0] isnt 'at-word'
-    break if curr[1] isnt '@import'
+    type = curr[0]
+    continue if toks.semi and type is ';'
+    continue if type is toks.space or type is toks.comment
+    break if !toks.isAtrule(curr) or !toks.isImport(curr)
     start = offset
     next() # skip ' '
-    ref = next()[1].slice 1, -1
-    next() # skip ';'
+    ref = next()[1]
+    ref = eval(ref) if toks.evalStrings
+    next() if toks.semi # skip ';'
     next() # skip '\n'
     deps.push
       ref: ref
