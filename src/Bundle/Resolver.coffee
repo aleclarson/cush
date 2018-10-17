@@ -1,4 +1,5 @@
 relative = require '@cush/relative'
+cush = require 'cush'
 path = require 'path'
 log = require('lodge').debug('cush')
 
